@@ -187,29 +187,34 @@
           </button>
         </div>
 
-        <div id="patient-result-area" style="display: none">
-          <div class="patient-info-summary">
-            <p><strong>Patient Name:</strong> <span id="res-name">--</span></p>
+       <div id="patient-result-area" style="display: none">
+    <div class="patient-info-summary">
+        <div>
+            <p><strong>Patient ID:</strong> <span id="res-name">--</span></p>
             <p><strong>Last Visit:</strong> <span id="res-date">--</span></p>
-          </div>
-
-          <div class="table-responsive">
-            <table class="record-table">
-             <thead>
-    <tr>
-        <th>Date</th>
-        <th>Symptoms Analyzed</th>
-        <th>Predicted Disease</th>
-        <th>Confidence</th>
-        <th>Status</th>
-        <th>Remedies</th>
-    </tr>
-</thead>
-              </thead>
-              <tbody id="patient-record-body"></tbody>
-            </table>
-          </div>
         </div>
+        <div>
+            <p><strong>Total Records:</strong> <span id="total-records">0</span></p>
+            <p><strong>Avg Confidence:</strong> <span id="avg-confidence">--</span></p>
+        </div>
+    </div>
+
+    <div class="table-responsive">
+        <table class="record-table">
+            <thead>
+                <tr>
+                    <th>Date</th>
+                    <th>Symptoms Analyzed</th>
+                    <th>Predicted Disease</th>
+                    <th>Confidence</th>
+                    <th>Status</th>
+                    <th>Remedies</th>
+                </tr>
+            </thead>
+            <tbody id="patient-record-body"></tbody>
+        </table>
+    </div>
+</div>
 
         <div
           id="no-result-msg"
