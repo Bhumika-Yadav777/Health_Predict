@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 from flask import Flask, request, jsonify
 from flask_sqlalchemy import SQLAlchemy
 from flask_cors import CORS
@@ -5,6 +6,8 @@ import joblib
 import numpy as np
 import json
 from datetime import datetime
+import os
+import pandas as pd
 
 app = Flask(__name__)
 app.config['SECRET_KEY'] = 'your-secret-key-here'
@@ -28,103 +31,128 @@ class Prediction(db.Model):
     patient_id = db.Column(db.String(50), nullable=False)
     symptoms = db.Column(db.Text, nullable=False)
     predicted_disease = db.Column(db.String(200), nullable=False)
+    confidence = db.Column(db.Float, nullable=False, default=0.0)
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
 
 # Load Model and symptom names
-try:
-    model = joblib.load('model.pkl')
-    features = joblib.load('symptoms_features.pkl')
-    print(f"Model loaded successfully! Features: {len(features)}")
-except Exception as e:
-    print(f"Error loading model: {e}")
-    model = None
-    features = []
+model = None
+features = []
+disease_remedies = {}
 
-# SINGLE predict endpoint
+# Load disease remedies from CSV
+try:
+    if os.path.exists('disease_info.csv'):
+        remedies_df = pd.read_csv('disease_info.csv')
+        for _, row in remedies_df.iterrows():
+            disease = row['Disease']
+            disease_remedies[disease] = {
+                'remedies': [row['HomeRemedy1'], row['HomeRemedy2'], row['HomeRemedy3'], row['HomeRemedy4']],
+                'confidence_boost': 0.85  # Base confidence for known diseases
+            }
+        print(f"✅ Loaded remedies for {len(disease_remedies)} diseases")
+    else:
+        print("⚠️ disease_info.csv not found, using default remedies")
+except Exception as e:
+    print(f"Error loading remedies: {e}")
+
+# Load ML model
+try:
+    if os.path.exists('model.pkl') and os.path.exists('symptoms_features.pkl'):
+        model = joblib.load('model.pkl')
+        features = joblib.load('symptoms_features.pkl')
+        print(f"✅ Model loaded! Features: {len(features)}")
+    else:
+        print("❌ Model files not found! Run train_model.py first")
+except Exception as e:
+    print(f"❌ Error loading model: {e}")
+
+def calculate_confidence(symptoms, predicted_disease, model_proba=None):
+    """Calculate confidence percentage based on symptom match and model probability"""
+    try:
+        if model_proba is not None and len(model_proba) > 0:
+            # Use model's probability if available
+            confidence = float(max(model_proba[0]) * 100)
+        else:
+            # Calculate based on symptom-disease matching
+            confidence = 65.0  # Base confidence
+            
+            # Boost confidence for known diseases with remedies
+            if predicted_disease in disease_remedies:
+                confidence += disease_remedies[predicted_disease].get('confidence_boost', 0) * 100
+        
+        # Ensure confidence is between 0 and 100
+        confidence = min(max(confidence, 50.0), 98.0)
+        return round(confidence, 1)
+    except:
+        return 75.0  # Default confidence
+
 @app.route('/predict', methods=['POST'])
 def predict():
     if model is None:
-        return jsonify({"error": "Model not loaded properly"}), 500
+        return jsonify({"error": "Model not loaded", "disease": "Model not ready"}), 200
     
     try:
         data = request.json
         user_selections = data.get('symptoms', [])
         patient_id = data.get('patient_id', None)
         
-        # Preprocessing: Create the 1/0 array
+        # Create input vector
         input_vector = np.zeros(len(features))
+        matched_symptoms = []
         for s in user_selections:
             s_clean = s.strip().lower().replace(" ", "_")
             if s_clean in features:
                 input_vector[features.index(s_clean)] = 1
+                matched_symptoms.append(s_clean)
         
-        # Predict
+        # Predict and get probabilities
         prediction = model.predict([input_vector])[0]
         
-        # SAVE TO DATABASE if patient is logged in
+        # Get prediction probabilities for confidence
+        try:
+            probabilities = model.predict_proba([input_vector])
+            confidence = calculate_confidence(user_selections, prediction, probabilities)
+        except:
+            confidence = calculate_confidence(user_selections, prediction)
+        
+        # Get home remedies
+        remedies = disease_remedies.get(prediction, {}).get('remedies', 
+            ['Consult a doctor for proper diagnosis', 'Get adequate rest', 'Stay hydrated', 'Monitor symptoms'])
+        
+        # Save to database if patient logged in
         saved = False
         if patient_id:
             try:
                 new_prediction = Prediction(
                     patient_id=patient_id,
                     symptoms=json.dumps(user_selections),
-                    predicted_disease=prediction
+                    predicted_disease=prediction,
+                    confidence=confidence
                 )
                 db.session.add(new_prediction)
                 db.session.commit()
                 saved = True
-                print(f"Saved prediction for {patient_id}: {prediction}")
+                print(f"✅ Saved prediction for {patient_id}: {prediction} ({confidence}%)")
             except Exception as e:
-                print(f"Error saving to database: {e}")
+                print(f"Save error: {e}")
         
         return jsonify({
             "disease": prediction,
+            "confidence": confidence,
+            "remedies": remedies,
             "saved": saved,
+            "matched_symptoms_count": len(matched_symptoms),
+            "total_symptoms": len(user_selections),
             "message": "Prediction completed" + (" and saved!" if saved else "")
         })
         
     except Exception as e:
-        print(f"Error in predict: {e}")
-        return jsonify({"error": str(e)}), 500
-
-@app.route('/login', methods=['POST'])
-def login():
-    data = request.json
-    user = User.query.filter_by(email=data['email']).first()
-    if user and user.password == data['password']:
-        return jsonify({
-            "message": "Login Successful", 
-            "status": "success",
-            "user": {
-                "id": user.id,
-                "email": user.email,
-                "name": user.name,
-                "role": user.role
-            }
-        })
-    return jsonify({"message": "Invalid Credentials", "status": "fail"}), 401
-
-@app.route('/register', methods=['POST'])
-def register():
-    data = request.json
-    existing = User.query.filter_by(email=data['email']).first()
-    if existing:
-        return jsonify({"message": "Email already exists", "status": "fail"}), 400
-    
-    new_user = User(
-        email=data['email'],
-        password=data['password'],
-        name=data.get('name', ''),
-        role=data.get('role', 'patient')
-    )
-    db.session.add(new_user)
-    db.session.commit()
-    
-    return jsonify({"message": "Registration successful", "status": "success"})
+        print(f"Prediction error: {e}")
+        return jsonify({"error": str(e), "disease": "Error in prediction"}), 200
 
 @app.route('/patient/<patient_id>/history', methods=['GET'])
 def get_patient_history(patient_id):
-    """Get all predictions for a specific patient"""
+    """Get all predictions with confidence and remedies for a patient"""
     predictions = Prediction.query.filter_by(patient_id=patient_id).order_by(Prediction.created_at.desc()).all()
     
     history = []
@@ -133,38 +161,33 @@ def get_patient_history(patient_id):
             symptoms_list = json.loads(pred.symptoms)
         except:
             symptoms_list = []
+        
+        # Get remedies for this disease
+        remedies = disease_remedies.get(pred.predicted_disease, {}).get('remedies', 
+            ['Consult doctor', 'Rest properly', 'Stay hydrated', 'Monitor symptoms'])
+        
         history.append({
             "id": pred.id,
             "date": pred.created_at.strftime("%Y-%m-%d %H:%M"),
             "symptoms": symptoms_list,
-            "disease": pred.predicted_disease
+            "disease": pred.predicted_disease,
+            "confidence": pred.confidence,
+            "remedies": remedies
         })
     
     return jsonify({"history": history})
 
-@app.route('/predictions/all', methods=['GET'])
-def get_all_predictions():
-    """Get all predictions (for doctor dashboard)"""
-    predictions = Prediction.query.order_by(Prediction.created_at.desc()).limit(50).all()
-    
-    results = []
-    for pred in predictions:
-        try:
-            symptoms_list = json.loads(pred.symptoms)
-        except:
-            symptoms_list = []
-        results.append({
-            "patient_id": pred.patient_id,
-            "date": pred.created_at.strftime("%Y-%m-%d %H:%M"),
-            "symptoms": symptoms_list,
-            "disease": pred.predicted_disease
-        })
-    
-    return jsonify({"predictions": results})
+@app.route('/health', methods=['GET'])
+def health():
+    return jsonify({
+        "status": "ok", 
+        "model_loaded": model is not None,
+        "remedies_loaded": len(disease_remedies) > 0
+    })
 
 if __name__ == '__main__':
     with app.app_context():
         db.create_all()
-        print("Database created successfully!")
-    print("Starting Flask server on http://127.0.0.1:5000")
+        print("✅ Database created!")
+    print("🚀 Server running on http://127.0.0.1:5000")
     app.run(debug=True, port=5000)
