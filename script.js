@@ -72,7 +72,66 @@ function showAuthForm(mode) {
         </form>
     `;
 }
+/* === REPLACED SYMPTOM & PREDICTION LOGIC === */
 
+// 1. Unified Click Listener for all Tags
+document.addEventListener('click', (e) => {
+    if (e.target.classList.contains('tag')) {
+        e.target.classList.toggle('active');
+        console.log("Toggled symptom:", e.target.textContent.trim());
+    }
+});
+
+// 2. Prediction Function
+async function runPrediction() {
+    const btn = document.querySelector('.btn-prediction');
+    const resultDiv = document.getElementById('prediction-result');
+    const diseaseText = document.getElementById('disease-name');
+    
+    // Collect active tags
+    const activeTags = Array.from(document.querySelectorAll('.tag.active'))
+        .map(tag => tag.textContent.trim().toLowerCase().replace(/\s+/g, '_'));
+
+    if (activeTags.length === 0) {
+        alert("Please select at least one symptom.");
+        return;
+    }
+
+    // UI Loading State
+    btn.disabled = true;
+    btn.innerHTML = `<i class="fas fa-spinner fa-spin"></i> Analyzing...`;
+
+    try {
+        const response = await fetch('http://127.0.0.1:5000/predict', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ symptoms: activeTags })
+        });
+
+        const data = await response.json();
+
+        if (response.ok) {
+            // Show result directly on the page
+            resultDiv.style.display = 'block';
+            diseaseText.innerHTML = `<strong>Potential Condition:</strong> ${data.disease}`;
+            resultDiv.scrollIntoView({ behavior: 'smooth' });
+        } else {
+            alert("Error from server: " + data.error);
+        }
+    } catch (error) {
+        console.error("Fetch error:", error);
+        alert("Cannot connect to backend. Is app.py running?");
+    } finally {
+        btn.disabled = false;
+        btn.innerHTML = `Analyze Symptoms`;
+    }
+}
+
+// 3. Attach to Button
+const analyzeBtn = document.querySelector('.btn-prediction');
+if (analyzeBtn) {
+    analyzeBtn.addEventListener('click', runPrediction);
+}
 /* === 4. HANDLE AUTH SUBMIT (Fixed & Closed) === */
 function handleAuthSubmit(e, mode) {
     e.preventDefault();
