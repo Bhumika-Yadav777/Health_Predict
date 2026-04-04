@@ -294,12 +294,24 @@ async function showProfileView(user) {
     .toUpperCase()
     .slice(0, 2);
 
+  // Fetch patient info from backend
+  let patientInfo = { name: user.name || "User", joined: user.joined || "April 2026" };
+  try {
+    const infoRes = await fetch(`${BASE_URL}/patient/${encodeURIComponent(user.email)}/info`);
+    if (infoRes.ok) {
+      const infoData = await infoRes.json();
+      patientInfo = infoData;
+    }
+  } catch (e) {
+    console.log("Using local user info");
+  }
+
   content.innerHTML = `
         <span class="close" onclick="closeModal()">&times;</span>
         <div class="profile-card">
             <div class="profile-header">
                 <div class="profile-avatar-large">${initials}</div>
-                <h2 class="profile-name">${user.name || "User"}</h2>
+                <h2 class="profile-name">${patientInfo.name || user.name}</h2>
                 <span class="role-badge">${user.role.toUpperCase()}</span>
             </div>
             <div class="profile-details">
@@ -313,10 +325,19 @@ async function showProfileView(user) {
                 </div>
                 <div class="detail-item">
                     <label><i class="fas fa-calendar-alt"></i> Member Since</label>
-                    <span>${user.joined || "April 2026"}</span>
+                    <span>${patientInfo.joined || user.joined}</span>
+                </div>
+                <div class="detail-item">
+                    <label><i class="fas fa-chart-line"></i> Total Predictions</label>
+                    <span id="total-predictions-count">--</span>
                 </div>
             </div>
-            <div class="history-section" style="margin-top: 20px;"><h4><i class="fas fa-spinner fa-spin"></i> Loading history...</h4></div>
+            <div class="history-section">
+                <h4><i class="fas fa-history"></i> Prediction History</h4>
+                <div id="history-list-container" class="history-list-container">
+                    <div class="loading-spinner"><i class="fas fa-spinner fa-spin"></i> Loading...</div>
+                </div>
+            </div>
             <div class="profile-actions">
                 <button class="btn-primary" onclick="closeModal()">Close</button>
                 <button onclick="handleLogout()" class="btn-logout"><i class="fas fa-sign-out-alt"></i> Sign Out</button>
@@ -324,41 +345,77 @@ async function showProfileView(user) {
         </div>
     `;
 
-  try {
-    const response = await fetch(
-      `${BASE_URL}/patient/${encodeURIComponent(user.email)}/history`,
-    );
-    const data = await response.json();
-    const historySection = content.querySelector(".history-section");
+  await loadPatientHistory(user.email);
+}
 
+async function loadPatientHistory(email) {
+  const historyContainer = document.getElementById("history-list-container");
+  if (!historyContainer) return;
+
+  try {
+    const response = await fetch(`${BASE_URL}/patient/${encodeURIComponent(email)}/history`);
+    const data = await response.json();
+    const totalCountSpan = document.getElementById("total-predictions-count");
+    
     if (data.history && data.history.length > 0) {
-      let historyHtml =
-        '<h4><i class="fas fa-history"></i> Recent Predictions</h4>';
-      data.history.slice(0, 5).forEach((record) => {
+      if (totalCountSpan) totalCountSpan.innerText = data.history.length;
+      
+      let historyHtml = '';
+      data.history.forEach((record) => {
         let confidenceColor = "#10b981";
-        if (record.confidence < 80) confidenceColor = "#f59e0b";
-        if (record.confidence < 70) confidenceColor = "#ef4444";
+        let confidenceText = "High";
+        if (record.confidence >= 80) {
+          confidenceColor = "#10b981";
+          confidenceText = "High";
+        } else if (record.confidence >= 60) {
+          confidenceColor = "#f59e0b";
+          confidenceText = "Medium";
+        } else {
+          confidenceColor = "#ef4444";
+          confidenceText = "Low";
+        }
 
         historyHtml += `
-                    <div style="border-bottom:1px solid var(--border); padding:10px 0;">
-                        <div style="font-size:0.8rem; color:var(--primary);">${record.date}</div>
-                        <div><strong>Disease:</strong> ${record.disease}</div>
-                        <div><strong>Confidence:</strong> <span style="color: ${confidenceColor}; font-weight: bold;">${record.confidence}%</span></div>
-                        <div style="font-size:0.8rem;"><strong>Symptoms:</strong> ${record.symptoms.join(", ")}</div>
-                        <div style="font-size:0.8rem; margin-top: 5px;"><strong><i class="fas fa-leaf"></i> Remedies:</strong> ${record.remedies.slice(0, 2).join("; ")}</div>
-                    </div>
-                `;
+          <div class="history-record">
+            <div class="record-header">
+              <span class="record-date"><i class="far fa-calendar-alt"></i> ${record.date}</span>
+              <span class="record-confidence" style="background: ${confidenceColor};">${record.confidence}% ${confidenceText}</span>
+            </div>
+            <div class="record-disease">
+              <strong>Predicted Disease:</strong> ${record.disease}
+            </div>
+            <div class="record-symptoms">
+              <strong>Symptoms:</strong> ${record.symptoms.join(", ")}
+            </div>
+            <div class="record-remedies">
+              <strong><i class="fas fa-leaf"></i> Remedies:</strong>
+              <ul>
+                ${record.remedies.slice(0, 3).map(r => `<li>${r}</li>`).join("")}
+              </ul>
+            </div>
+          </div>
+        `;
       });
-      historySection.innerHTML = historyHtml;
+      historyContainer.innerHTML = historyHtml;
     } else {
-      historySection.innerHTML =
-        '<h4><i class="fas fa-history"></i> Recent Predictions</h4><p>No predictions yet. Try analyzing symptoms!</p>';
+      if (totalCountSpan) totalCountSpan.innerText = "0";
+      historyContainer.innerHTML = `
+        <div class="empty-history">
+          <i class="fas fa-clinic-medical"></i>
+          <p>No predictions yet</p>
+          <small>Try analyzing symptoms to see your history here!</small>
+        </div>
+      `;
     }
   } catch (error) {
     console.error("History error:", error);
-    const historySection = content.querySelector(".history-section");
-    historySection.innerHTML =
-      '<h4><i class="fas fa-history"></i> Recent Predictions</h4><p style="color: #ef4444;">Unable to load history. Make sure backend is running.</p>';
+    historyContainer.innerHTML = `
+      <div class="empty-history error">
+        <i class="fas fa-exclamation-triangle"></i>
+        <p>Unable to load history</p>
+        <small>Make sure the backend server is running.</small>
+      </div>
+    `;
   }
 }
 
@@ -386,10 +443,7 @@ function updateNavAfterLogin(user) {
 }
 
 async function searchPatient() {
-  const id = document
-    .getElementById("patient-search-input")
-    .value.trim()
-    .toUpperCase();
+  const id = document.getElementById("patient-search-input").value.trim().toUpperCase();
   const resultArea = document.getElementById("patient-result-area");
   const errorMsg = document.getElementById("no-result-msg");
   const tableBody = document.getElementById("patient-record-body");
@@ -404,27 +458,32 @@ async function searchPatient() {
   errorMsg.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Loading patient records...';
 
   try {
-    const response = await fetch(
-      `${BASE_URL}/patient/${encodeURIComponent(id)}/history`,
-    );
-    const data = await response.json();
+    // First, try to find user by email (patient_id is email)
+    const historyResponse = await fetch(`${BASE_URL}/patient/${encodeURIComponent(id)}/history`);
+    const historyData = await historyResponse.json();
 
-    if (data.history && data.history.length > 0) {
+    // Also try to get patient info
+    let patientName = id;
+    try {
+      const infoResponse = await fetch(`${BASE_URL}/patient/${encodeURIComponent(id)}/info`);
+      if (infoResponse.ok) {
+        const infoData = await infoResponse.json();
+        patientName = infoData.name || id;
+      }
+    } catch (e) {}
+
+    if (historyData.history && historyData.history.length > 0) {
       errorMsg.style.display = "none";
       tableBody.innerHTML = "";
 
-      document.getElementById("res-name").innerText = id;
-      document.getElementById("res-date").innerText =
-        data.history[0]?.date || "N/A";
-      document.getElementById("total-records").innerText = data.history.length;
+      document.getElementById("res-name").innerText = patientName;
+      document.getElementById("res-date").innerText = historyData.history[0]?.date || "N/A";
+      document.getElementById("total-records").innerText = historyData.history.length;
 
-      let avgConfidence =
-        data.history.reduce((sum, rec) => sum + rec.confidence, 0) /
-        data.history.length;
-      document.getElementById("avg-confidence").innerHTML =
-        `<span style="color: #10b981;">${avgConfidence.toFixed(1)}%</span>`;
+      let avgConfidence = historyData.history.reduce((sum, rec) => sum + rec.confidence, 0) / historyData.history.length;
+      document.getElementById("avg-confidence").innerHTML = `<span style="color: #10b981;">${avgConfidence.toFixed(1)}%</span>`;
 
-      data.history.forEach((rec) => {
+      historyData.history.forEach((rec) => {
         let confidenceColor = "#10b981";
         let confidenceText = "High";
         if (rec.confidence >= 80) {
@@ -441,31 +500,31 @@ async function searchPatient() {
         const remediesList = rec.remedies.map((r) => `• ${r}`).join("\n");
 
         tableBody.innerHTML += `
-                    <tr>
-                        <td>${rec.date}</td>
-                        <td style="max-width: 200px;">${rec.symptoms.join(", ")}</td>
-                        <td><strong>${rec.disease}</strong></td>
-                        <td>
-                            <span style="background: ${confidenceColor}; color: white; padding: 4px 8px; border-radius: 20px; font-size: 0.8rem;">
-                                ${rec.confidence}% (${confidenceText})
-                            </span>
-                            <div style="background: #e5e7eb; border-radius: 10px; height: 4px; margin-top: 5px; width: 80px;">
-                                <div style="background: ${confidenceColor}; width: ${rec.confidence}%; height: 4px; border-radius: 10px;"></div>
-                            </div>
-                        </td>
-                        <td><span class="status-badge status-reviewed">Completed</span></td>
-                        <td>
-                            <button onclick="showDetailedRemedies('${rec.disease.replace(/'/g, "\\'")}', \`${remediesList.replace(/`/g, "\\`")}\`)" 
-                                    style="background: var(--primary); color: white; border: none; padding: 6px 12px; border-radius: 6px; cursor: pointer; font-size: 0.8rem;">
-                                <i class="fas fa-leaf"></i> View Remedies
-                            </button>
-                        </td>
-                    </tr>
-                `;
+          <tr>
+            <td>${rec.date}</td>
+            <td style="max-width: 200px;">${rec.symptoms.join(", ")}</td>
+            <td><strong>${rec.disease}</strong></td>
+            <td>
+              <span class="confidence-badge" style="background: ${confidenceColor};">${rec.confidence}% (${confidenceText})</span>
+              <div class="confidence-bar-small">
+                <div class="confidence-fill-small" style="width: ${rec.confidence}%; background: ${confidenceColor};"></div>
+              </div>
+            </td>
+            <td><span class="status-badge status-reviewed">Completed</span></td>
+            <td>
+              <button class="btn-view-remedies" onclick="showDetailedRemedies('${rec.disease.replace(/'/g, "\\'")}', \`${remediesList.replace(/`/g, "\\`")}\`)">
+                <i class="fas fa-leaf"></i> View
+              </button>
+            </td>
+          </tr>
+        `;
       });
       resultArea.style.display = "block";
     } else {
-      errorMsg.innerHTML = `<i class="fas fa-exclamation-circle"></i> No records found for patient ID: ${id}<br><small>Make sure the patient has made predictions after logging in.</small>`;
+      errorMsg.innerHTML = `
+        <i class="fas fa-exclamation-circle"></i> No records found for patient ID: ${id}<br>
+        <small>Make sure the patient has made predictions after logging in.</small>
+      `;
     }
   } catch (error) {
     console.error("Search error:", error);
@@ -475,41 +534,35 @@ async function searchPatient() {
 
 function showDetailedRemedies(disease, remediesText) {
   const modal = document.createElement("div");
+  modal.className = "remedies-modal-overlay";
   modal.style.cssText = `
-        position: fixed;
-        top: 0;
-        left: 0;
-        width: 100%;
-        height: 100%;
-        background: rgba(0,0,0,0.5);
-        display: flex;
-        justify-content: center;
-        align-items: center;
-        z-index: 10000;
-    `;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0,0,0,0.5);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 10000;
+  `;
 
   modal.innerHTML = `
-        <div style="background: white; padding: 30px; border-radius: 15px; max-width: 400px; width: 90%;">
-            <h3 style="color: var(--primary); margin-bottom: 15px;">
-                <i class="fas fa-leaf"></i> Home Remedies for ${disease}
-            </h3>
-            <div style="margin: 20px 0;">
-                ${remediesText
-                  .split("\n")
-                  .map((r) => `<p style="margin: 10px 0;">${r}</p>`)
-                  .join("")}
-            </div>
-            <div style="background: #fef3c7; padding: 10px; border-radius: 8px; margin: 15px 0;">
-                <small style="color: #92400e;">
-                    <i class="fas fa-exclamation-triangle"></i> Note: These are home remedies. Please consult a doctor for proper medical advice.
-                </small>
-            </div>
-            <button onclick="this.closest('div').parentElement.remove()" 
-                    style="background: var(--primary); color: white; border: none; padding: 10px 20px; border-radius: 8px; cursor: pointer; width: 100%;">
-                Close
-            </button>
-        </div>
-    `;
+    <div class="remedies-modal-content">
+      <div class="remedies-modal-header">
+        <h3><i class="fas fa-leaf"></i> Home Remedies for ${disease}</h3>
+        <button class="remedies-modal-close" onclick="this.closest('.remedies-modal-overlay').remove()">&times;</button>
+      </div>
+      <div class="remedies-modal-body">
+        ${remediesText.split("\n").map(r => `<p><i class="fas fa-check-circle"></i> ${r}</p>`).join("")}
+      </div>
+      <div class="remedies-modal-footer">
+        <small><i class="fas fa-exclamation-triangle"></i> Note: These are home remedies. Please consult a doctor for proper medical advice.</small>
+        <button onclick="this.closest('.remedies-modal-overlay').remove()" class="btn-close-remedies">Close</button>
+      </div>
+    </div>
+  `;
 
   document.body.appendChild(modal);
 }
@@ -556,7 +609,6 @@ async function runPrediction() {
       return;
     }
 
-    // Get current logged in user's email as patient_id
     const savedUser = localStorage.getItem("currentUser") || sessionStorage.getItem("currentUser");
     let patient_id = null;
     if (savedUser) {
@@ -580,52 +632,51 @@ async function runPrediction() {
     const data = await response.json();
     console.log("Prediction result:", data);
 
-    // Display result in a nice modal
     let confidenceColor = "#10b981";
     if (data.confidence < 80) confidenceColor = "#f59e0b";
     if (data.confidence < 70) confidenceColor = "#ef4444";
 
     const resultHtml = `
-      <div style="position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); display: flex; justify-content: center; align-items: center; z-index: 10000;" onclick="if(event.target===this)this.remove()">
-        <div style="background: white; padding: 30px; border-radius: 15px; max-width: 450px; width: 90%;">
-          <h3 style="color: var(--primary); margin-bottom: 20px;">
-            <i class="fas fa-microscope"></i> Analysis Result
-          </h3>
-          <div style="margin-bottom: 20px;">
-            <strong>Predicted Disease:</strong>
-            <h2 style="color: ${confidenceColor}; margin-top: 5px;">${data.disease}</h2>
+      <div class="prediction-result-overlay" onclick="if(event.target===this)this.remove()">
+        <div class="prediction-result-card">
+          <div class="result-header">
+            <h3><i class="fas fa-microscope"></i> Analysis Result</h3>
+            <button class="result-close" onclick="this.closest('.prediction-result-overlay').remove()">&times;</button>
           </div>
-          <div style="margin-bottom: 20px;">
-            <strong>Confidence:</strong>
-            <div style="font-size: 24px; font-weight: bold; color: ${confidenceColor}; margin: 5px 0;">${data.confidence}%</div>
-            <div style="background: #e5e7eb; border-radius: 10px; height: 8px;">
-              <div style="background: ${confidenceColor}; width: ${data.confidence}%; height: 8px; border-radius: 10px;"></div>
+          <div class="result-disease">
+            <label>Predicted Disease</label>
+            <h2 style="color: ${confidenceColor};">${data.disease}</h2>
+          </div>
+          <div class="result-confidence">
+            <label>Confidence Level</label>
+            <div class="confidence-value" style="color: ${confidenceColor};">${data.confidence}%</div>
+            <div class="confidence-bar">
+              <div class="confidence-fill" style="width: ${data.confidence}%; background: ${confidenceColor};"></div>
             </div>
           </div>
-          <div style="margin-bottom: 20px;">
-            <strong><i class="fas fa-leaf"></i> Home Remedies:</strong>
-            <ul style="margin-top: 10px; padding-left: 20px;">
-              ${data.remedies.map(r => `<li style="margin: 8px 0;">${r}</li>`).join("")}
+          <div class="result-remedies">
+            <label><i class="fas fa-leaf"></i> Home Remedies</label>
+            <ul>
+              ${data.remedies.map(r => `<li>${r}</li>`).join("")}
             </ul>
           </div>
-          <div style="background: #fef3c7; padding: 10px; border-radius: 8px; margin: 15px 0;">
-            <small style="color: #92400e;">
-              <i class="fas fa-exclamation-triangle"></i> Note: This is an AI prediction. Please consult a doctor for proper medical advice.
-            </small>
+          <div class="result-note">
+            <small><i class="fas fa-exclamation-triangle"></i> This is an AI prediction. Please consult a doctor for proper medical advice.</small>
           </div>
-          <button onclick="this.closest('div').parentElement.remove()" 
-                  style="background: var(--primary); color: white; border: none; padding: 10px 20px; border-radius: 8px; cursor: pointer; width: 100%;">
-            Close
-          </button>
+          <button class="btn-close-result" onclick="this.closest('.prediction-result-overlay').remove()">Close</button>
         </div>
       </div>
     `;
 
     document.body.insertAdjacentHTML('beforeend', resultHtml);
     
-    // If prediction was saved, show a toast message
-    if (data.saved) {
-      console.log("Prediction saved to history!");
+    if (data.saved && patient_id) {
+      // Refresh history if modal is open
+      const modal = document.getElementById("login-modal");
+      if (modal && modal.style.display === "flex") {
+        const savedUserData = JSON.parse(savedUser);
+        await loadPatientHistory(savedUserData.email);
+      }
     }
     
   } catch (error) {
