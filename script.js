@@ -16,6 +16,20 @@ if (themeBtn) {
   });
 }
 
+// Symptom Tag Selection
+function attachTagListeners() {
+  const tags = document.querySelectorAll(".tag");
+  tags.forEach((tag) => {
+    tag.removeEventListener("click", tagClickHandler);
+    tag.addEventListener("click", tagClickHandler);
+  });
+}
+
+function tagClickHandler(e) {
+  e.stopPropagation();
+  this.classList.toggle("active");
+}
+
 // Modal Controls
 function openModal() {
   const modal = document.getElementById("login-modal");
@@ -84,7 +98,6 @@ function showAuthForm(mode) {
     `;
 }
 
-/* === 4. HANDLE AUTH SUBMIT (Fixed & Closed) === */
 function handleAuthSubmit(e, mode) {
   e.preventDefault();
   const role = document.querySelector('input[name="role"]:checked').value;
@@ -158,7 +171,6 @@ function handleAuthSubmit(e, mode) {
   }
 }
 
-// Updated Profile View with Confidence and Remedies
 async function showProfileView(user) {
   const content = document.querySelector(".modal-content");
   if (!content) return;
@@ -212,8 +224,8 @@ async function showProfileView(user) {
         '<h4><i class="fas fa-history"></i> Recent Predictions</h4>';
       data.history.slice(0, 5).forEach((record) => {
         let confidenceColor = "#10b981";
-        if (record.confidence < 70) confidenceColor = "#f59e0b";
-        if (record.confidence < 55) confidenceColor = "#ef4444";
+        if (record.confidence < 80) confidenceColor = "#f59e0b";
+        if (record.confidence < 70) confidenceColor = "#ef4444";
 
         historyHtml += `
                     <div style="border-bottom:1px solid var(--border); padding:10px 0;">
@@ -259,10 +271,8 @@ function updateNavAfterLogin(user) {
   const label = container.querySelector(".nav-label");
   label.textContent = user.id;
   container.classList.add("logged-in");
-  if (!iconCircle) return;
 }
 
-// Enhanced Doctor Dashboard Search Function
 async function searchPatient() {
   const id = document
     .getElementById("patient-search-input")
@@ -279,8 +289,7 @@ async function searchPatient() {
 
   resultArea.style.display = "none";
   errorMsg.style.display = "block";
-  errorMsg.innerHTML =
-    '<i class="fas fa-spinner fa-spin"></i> Loading patient records...';
+  errorMsg.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Loading patient records...';
 
   try {
     const response = await fetch(
@@ -292,22 +301,18 @@ async function searchPatient() {
       errorMsg.style.display = "none";
       tableBody.innerHTML = "";
 
-      // Update patient info
       document.getElementById("res-name").innerText = id;
       document.getElementById("res-date").innerText =
         data.history[0]?.date || "N/A";
       document.getElementById("total-records").innerText = data.history.length;
 
-      // Calculate average confidence
       let avgConfidence =
         data.history.reduce((sum, rec) => sum + rec.confidence, 0) /
         data.history.length;
       document.getElementById("avg-confidence").innerHTML =
         `<span style="color: #10b981;">${avgConfidence.toFixed(1)}%</span>`;
 
-      // Display each record
-      data.history.forEach((rec, index) => {
-        // Confidence badge color
+      data.history.forEach((rec) => {
         let confidenceColor = "#10b981";
         let confidenceText = "High";
         if (rec.confidence >= 80) {
@@ -321,7 +326,6 @@ async function searchPatient() {
           confidenceText = "Low";
         }
 
-        // Remedies for this record
         const remediesList = rec.remedies.map((r) => `• ${r}`).join("\n");
 
         tableBody.innerHTML += `
@@ -357,9 +361,7 @@ async function searchPatient() {
   }
 }
 
-// Function to show detailed remedies modal
 function showDetailedRemedies(disease, remediesText) {
-  // Create modal for remedies
   const modal = document.createElement("div");
   modal.style.cssText = `
         position: fixed;
@@ -431,6 +433,103 @@ if (contactForm) {
   });
 }
 
+// Prediction Function
+async function runPrediction() {
+  try {
+    const selectedTags = document.querySelectorAll('.tag.active');
+    const symptoms = Array.from(selectedTags).map(tag => tag.textContent);
+
+    if (symptoms.length === 0) {
+      alert("Please select at least one symptom");
+      return;
+    }
+
+    // Get current logged in user's email as patient_id
+    const savedUser = localStorage.getItem("currentUser") || sessionStorage.getItem("currentUser");
+    let patient_id = null;
+    if (savedUser) {
+      const user = JSON.parse(savedUser);
+      if (user.role === "patient") {
+        patient_id = user.email;
+      }
+    }
+
+    const response = await fetch(`${BASE_URL}/predict`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify({ 
+        symptoms: symptoms,
+        patient_id: patient_id
+      })
+    });
+
+    const data = await response.json();
+    console.log("Prediction result:", data);
+
+    // Display result in a nice modal
+    let confidenceColor = "#10b981";
+    if (data.confidence < 80) confidenceColor = "#f59e0b";
+    if (data.confidence < 70) confidenceColor = "#ef4444";
+
+    const resultHtml = `
+      <div style="position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); display: flex; justify-content: center; align-items: center; z-index: 10000;" onclick="if(event.target===this)this.remove()">
+        <div style="background: white; padding: 30px; border-radius: 15px; max-width: 450px; width: 90%;">
+          <h3 style="color: var(--primary); margin-bottom: 20px;">
+            <i class="fas fa-microscope"></i> Analysis Result
+          </h3>
+          <div style="margin-bottom: 20px;">
+            <strong>Predicted Disease:</strong>
+            <h2 style="color: ${confidenceColor}; margin-top: 5px;">${data.disease}</h2>
+          </div>
+          <div style="margin-bottom: 20px;">
+            <strong>Confidence:</strong>
+            <div style="font-size: 24px; font-weight: bold; color: ${confidenceColor}; margin: 5px 0;">${data.confidence}%</div>
+            <div style="background: #e5e7eb; border-radius: 10px; height: 8px;">
+              <div style="background: ${confidenceColor}; width: ${data.confidence}%; height: 8px; border-radius: 10px;"></div>
+            </div>
+          </div>
+          <div style="margin-bottom: 20px;">
+            <strong><i class="fas fa-leaf"></i> Home Remedies:</strong>
+            <ul style="margin-top: 10px; padding-left: 20px;">
+              ${data.remedies.map(r => `<li style="margin: 8px 0;">${r}</li>`).join("")}
+            </ul>
+          </div>
+          <div style="background: #fef3c7; padding: 10px; border-radius: 8px; margin: 15px 0;">
+            <small style="color: #92400e;">
+              <i class="fas fa-exclamation-triangle"></i> Note: This is an AI prediction. Please consult a doctor for proper medical advice.
+            </small>
+          </div>
+          <button onclick="this.closest('div').parentElement.remove()" 
+                  style="background: var(--primary); color: white; border: none; padding: 10px 20px; border-radius: 8px; cursor: pointer; width: 100%;">
+            Close
+          </button>
+        </div>
+      </div>
+    `;
+
+    document.body.insertAdjacentHTML('beforeend', resultHtml);
+    
+    // If prediction was saved, show a toast message
+    if (data.saved) {
+      console.log("Prediction saved to history!");
+    }
+    
+  } catch (error) {
+    console.error(error);
+    alert("Prediction failed. Make sure the backend server is running on port 5000.");
+  }
+}
+
+function toggleFAQ(element) {
+  const item = element.parentElement;
+  document.querySelectorAll(".faq-item").forEach((otherItem) => {
+    if (otherItem !== item) otherItem.classList.remove("active");
+  });
+  item.classList.toggle("active");
+}
+
 // Page Initialization
 window.addEventListener("load", () => {
   const savedTheme = localStorage.getItem("hp_theme");
@@ -463,49 +562,12 @@ window.addEventListener("load", () => {
       const val = customInput.value.trim();
       if (!val) return;
       const tag = document.createElement("button");
-      tag.className = "tag active";
+      tag.className = "tag";
       tag.type = "button";
       tag.textContent = val;
+      tag.addEventListener("click", tagClickHandler);
       tagsContainer.appendChild(tag);
-      attachTagListeners();
       customInput.value = "";
     });
   }
 });
-
-function toggleFAQ(element) {
-  const item = element.parentElement;
-  document.querySelectorAll(".faq-item").forEach((otherItem) => {
-    if (otherItem !== item) otherItem.classList.remove("active");
-  });
-  item.classList.toggle("active");
-}
-
-async function runPrediction() {
-    try {
-        const selectedTags = document.querySelectorAll('.tag.active');
-        const symptoms = Array.from(selectedTags).map(tag => tag.textContent);
-
-        if (symptoms.length === 0) {
-            alert("Please select at least one symptom");
-            return;
-        }
-
-        const response = await fetch("http://127.0.0.1:5000/predict", {
-            method: "POST",
-            headers: {
-                "Content-Type": "application/json"
-            },
-            body: JSON.stringify({ symptoms })
-        });
-
-        const data = await response.json();
-        console.log("Prediction result:", data);
-
-        alert(`Disease: ${data.disease}\nConfidence: ${data.confidence}%`);
-        
-    } catch (error) {
-        console.error(error);
-        alert("Prediction failed. Check backend.");
-    }
-}
