@@ -126,6 +126,16 @@
         </button>
       </div>
     </section>
+    
+
+<div id="prediction-result" class="result-container" style="display: none;">
+    <div class="result-card">
+        <h3><i class="fas fa-microscope"></i> Analysis Result</h3>
+        <p id="disease-name"></p>
+        <div id="confidence-level"></div>
+        <div id="remedies-list"></div>
+    </div>
+</div>
 
     <section id="how-it-works" class="container">
       <h2 class="center">How It Works</h2>
@@ -177,27 +187,34 @@
           </button>
         </div>
 
-        <div id="patient-result-area" style="display: none">
-          <div class="patient-info-summary">
-            <p><strong>Patient Name:</strong> <span id="res-name">--</span></p>
+       <div id="patient-result-area" style="display: none">
+    <div class="patient-info-summary">
+        <div>
+            <p><strong>Patient ID:</strong> <span id="res-name">--</span></p>
             <p><strong>Last Visit:</strong> <span id="res-date">--</span></p>
-          </div>
-
-          <div class="table-responsive">
-            <table class="record-table">
-              <thead>
-                <tr>
-                  <th>Date</th>
-                  <th>Symptoms Analyzed</th>
-                  <th>Predicted Disease</th>
-                  <th>Confidence</th>
-                  <th>Status</th>
-                </tr>
-              </thead>
-              <tbody id="patient-record-body"></tbody>
-            </table>
-          </div>
         </div>
+        <div>
+            <p><strong>Total Records:</strong> <span id="total-records">0</span></p>
+            <p><strong>Avg Confidence:</strong> <span id="avg-confidence">--</span></p>
+        </div>
+    </div>
+
+    <div class="table-responsive">
+        <table class="record-table">
+            <thead>
+                <tr>
+                    <th>Date</th>
+                    <th>Symptoms Analyzed</th>
+                    <th>Predicted Disease</th>
+                    <th>Confidence</th>
+                    <th>Status</th>
+                    <th>Remedies</th>
+                </tr>
+            </thead>
+            <tbody id="patient-record-body"></tbody>
+        </table>
+    </div>
+</div>
 
         <div
           id="no-result-msg"
@@ -205,7 +222,7 @@
             display: none;
             color: #e63946;
             text-align: center;
-            margin-top: 20px;
+            margin-top: 20 px;
           "
         >
           <i class="fas fa-exclamation-circle"></i> No patient found with that
@@ -333,8 +350,8 @@
       <div class="container footer-content">
         <div class="footer-brand">
           <div class="logo">HealthPredict</div>
-          <p>(866) 988-4504</p>
-          <p>support@healthpredict.com</p>
+          <p>xxxxxxxxxx</p>
+          <p>healthpredict.us@gmail.com</p>
           <button class="btn-outline" onclick="location.href = '#contact'">
             Contact Us
           </button>
@@ -343,7 +360,6 @@
         <div class="footer-links">
           <div class="link-group">
             <h4>About us</h4>
-            <a href="#">Careers</a>
             <a href="#">Locations</a>
             <a href="#faqs">FAQs</a>
           </div>
@@ -351,11 +367,9 @@
             <h4>Patients</h4>
             <a href="#how-it-works">How it works</a>
             <a href="#">New patient registration</a>
-            <a href="#">Online payment</a>
           </div>
           <div class="link-group">
             <h4>Partners</h4>
-            <a href="#">Service</a>
             <a href="#">News and blog</a>
             <a href="#contact">Contact us</a>
           </div>
