@@ -62,43 +62,50 @@ function showAuthForm(mode) {
   if (!content) return;
 
   content.innerHTML = `
-    <span class="close" onclick="closeModal()">&times;</span>
-    <div class="auth-tabs">
-      <button class="tab-btn ${isLogin ? "active" : ""}" onclick="showAuthForm('login')">Sign In</button>
-      <button class="tab-btn ${!isLogin ? "active" : ""}" onclick="showAuthForm('register')">Register</button>
-    </div>
-    <form id="auth-form" onsubmit="handleAuthSubmit(event, '${mode}')">
-      <h2 style="margin-bottom:15px; color:var(--text);">${isLogin ? "Welcome Back" : "Create Account"}</h2>
-      ${!isLogin ? '<input type="text" id="reg-name" placeholder="Full Name" required class="auth-input">' : ""}
-      <div class="role-selection">
-        <label style="color:var(--text);">I am a:</label>
-        <div class="radio-group">
-          <input type="radio" name="role" value="patient" id="role-p" checked>
-          <label for="role-p">Patient</label>
-          <input type="radio" name="role" value="doctor" id="role-d">
-          <label for="role-d">Doctor</label>
+        <span class="close" onclick="closeModal()">&times;</span>
+        <div class="auth-tabs">
+            <button class="tab-btn ${isLogin ? "active" : ""}" onclick="showAuthForm('login')">Sign In</button>
+            <button class="tab-btn ${!isLogin ? "active" : ""}" onclick="showAuthForm('register')">Register</button>
         </div>
-      </div>
-      <input type="text" id="user-id" placeholder="ID (e.g. P101 or D202)" required class="auth-input">
-      <input type="email" id="user-email" placeholder="Email Address" required class="auth-input">
-      <input type="password" id="user-pass" placeholder="Password" required class="auth-input">
-      ${!isLogin ? '<input type="password" id="user-pass2" placeholder="Confirm Password" required class="auth-input">' : ""}
-      ${isLogin ? `
-      <div class="remember-group">
-        <input type="checkbox" id="remember-me">
-        <label for="remember-me" style="color:var(--text);">Keep me logged in</label>
-      </div>` : ""}
-      <p id="auth-error" style="color:#ef4444; font-size:0.8rem; min-height:20px; margin:10px 0;"></p>
-      <button type="submit" class="btn-primary" style="width:100%">${isLogin ? "Login" : "Register"}</button>
-    </form>
-  `;
+        <form id="auth-form" onsubmit="handleAuthSubmit(event, '${mode}')">
+            <h2 style="margin-bottom:15px; color:var(--text);">${isLogin ? "Welcome Back" : "Create Account"}</h2>
+            ${!isLogin ? '<input type="text" id="reg-name" placeholder="Full Name" required class="auth-input">' : ""}
+            <div class="role-selection">
+                <label style="color:var(--text);">I am a:</label>
+                <div class="radio-group">
+                    <input type="radio" name="role" value="patient" id="role-p" checked>
+                    <label for="role-p">Patient</label>
+                    <input type="radio" name="role" value="doctor" id="role-d">
+                    <label for="role-d">Doctor</label>
+                </div>
+            </div>
+            <input type="text" id="user-id" placeholder="ID (e.g. P101 or D202)" required class="auth-input">
+            <input type="email" id="user-email" placeholder="Email Address" required class="auth-input">
+            <input type="password" id="user-pass" placeholder="Password" required class="auth-input">
+            ${!isLogin ? '<input type="password" id="user-pass2" placeholder="Confirm Password" required class="auth-input">' : ""}
+            ${
+              isLogin
+                ? `
+            <div class="remember-group">
+                <input type="checkbox" id="remember-me">
+                <label for="remember-me" style="color:var(--text);">Keep me logged in</label>
+            </div>`
+                : ""
+            }
+            <p id="auth-error" style="color:#ef4444; font-size:0.8rem; min-height:20px; margin:10px 0;"></p>
+            <button type="submit" class="btn-primary" style="width:100%">${isLogin ? "Login" : "Register"}</button>
+        </form>
+    `;
 }
 
 function handleAuthSubmit(e, mode) {
   e.preventDefault();
   const role = document.querySelector('input[name="role"]:checked').value;
   const id = document.getElementById("user-id").value.trim().toUpperCase();
-  const email = document.getElementById("user-email").value.trim().toLowerCase();
+  const email = document
+    .getElementById("user-email")
+    .value.trim()
+    .toLowerCase();
   const pass = document.getElementById("user-pass").value;
   const errorEl = document.getElementById("auth-error");
 
@@ -147,7 +154,9 @@ function handleAuthSubmit(e, mode) {
       body: JSON.stringify({ email, password: pass, name, role }),
     }).catch((e) => console.log("Backend sync:", e));
   } else {
-    const user = users.find((u) => u.id === id && u.email === email && u.pass === pass);
+    const user = users.find(
+      (u) => u.id === id && u.email === email && u.pass === pass,
+    );
     if (!user) {
       errorEl.textContent = "Invalid Credentials.";
       return;
@@ -166,62 +175,134 @@ async function showProfileView(user) {
   const content = document.querySelector(".modal-content");
   if (!content) return;
 
-  const initials = (user.name || user.id).split(" ").map((w) => w[0]).join("").toUpperCase().slice(0, 2);
+  const initials = (user.name || user.id)
+    .split(" ")
+    .map((w) => w[0])
+    .join("")
+    .toUpperCase()
+    .slice(0, 2);
 
-  content.innerHTML = `
-    <span class="close" onclick="closeModal()">&times;</span>
-    <div style="display: flex; min-height: 500px;">
-      <div style="flex: 1; padding: 30px; border-right: 1px solid var(--border); text-align: center;">
-        <div class="profile-avatar-large">${initials}</div>
-        <h2>${user.name || "User"}</h2>
-        <span class="role-badge">${user.role.toUpperCase()}</span>
-        <div style="margin-top: 30px; text-align: left;">
-          <div style="margin-bottom: 15px;"><label style="display: block; font-size: 0.75rem; opacity: 0.6;">ID</label><span>${user.id}</span></div>
-          <div style="margin-bottom: 15px;"><label style="display: block; font-size: 0.75rem; opacity: 0.6;">Email</label><span>${user.email}</span></div>
-          <div><label style="display: block; font-size: 0.75rem; opacity: 0.6;">Total Predictions</label><span id="total-count">--</span></div>
-        </div>
-        <button onclick="handleLogout()" class="btn-logout" style="margin-top: 20px;"><i class="fas fa-sign-out-alt"></i> Sign Out</button>
-      </div>
-      <div style="flex: 1.5; padding: 30px; display: flex; flex-direction: column;">
-        <h3><i class="fas fa-history"></i> Prediction History</h3>
-        <div id="history-list" style="overflow-y: auto; flex: 1; margin-top: 20px; max-height: 400px;"></div>
-      </div>
-    </div>
-  `;
-
+  let patientInfo = { name: user.name || "User", joined: user.joined || "April 2026" };
   try {
-    const res = await fetch(`${BASE_URL}/patient/${encodeURIComponent(user.email)}/history`);
-    const data = await res.json();
-    const list = document.getElementById("history-list");
-    const totalSpan = document.getElementById("total-count");
-
-    if (data.history && data.history.length > 0) {
-      if (totalSpan) totalSpan.innerText = data.history.length;
-      list.innerHTML = data.history.map(rec => {
-        let confColor = rec.confidence >= 80 ? "#10b981" : (rec.confidence >= 60 ? "#f59e0b" : "#ef4444");
-        return `
-          <div style="background: var(--glass); border: 1px solid var(--border); padding: 15px; border-radius: 12px; margin-bottom: 15px;">
-            <div style="display: flex; justify-content: space-between; font-size: 0.8rem; color: var(--primary);">
-              <span>${rec.date}</span>
-              <strong style="color: ${confColor};">${rec.confidence}%</strong>
-            </div>
-            <h4 style="margin: 5px 0;">${rec.disease}</h4>
-            <p style="font-size: 0.8rem; opacity: 0.7;">Symptoms: ${rec.symptoms.join(', ')}</p>
-            <details style="margin-top: 10px;">
-              <summary style="cursor: pointer; color: var(--primary); font-size: 0.8rem;"><i class="fas fa-leaf"></i> View Remedies</summary>
-              <ul style="margin-top: 10px; padding-left: 20px;">
-                ${rec.remedies.slice(0, 3).map(r => `<li>${r}</li>`).join('')}
-              </ul>
-            </details>
-          </div>
-        `;
-      }).join('');
-    } else {
-      if (totalSpan) totalSpan.innerText = "0";
-      list.innerHTML = "<p style='text-align: center; padding: 40px;'>No predictions yet.<br><small>Try analyzing symptoms!</small></p>";
+    const infoRes = await fetch(`${BASE_URL}/patient/${encodeURIComponent(user.email)}/info`);
+    if (infoRes.ok) {
+      const infoData = await infoRes.json();
+      patientInfo = infoData;
     }
   } catch (e) {
-    document.getElementById("history-list").innerHTML = "<p style='color: red;'>Error loading history. Make sure backend is running.</p>";
+    console.log("Using local user info");
+  }
+
+  content.innerHTML = `
+        <span class="close" onclick="closeModal()">&times;</span>
+        <div class="profile-card">
+            <div class="profile-header">
+                <div class="profile-avatar-large">${initials}</div>
+                <h2 class="profile-name">${patientInfo.name || user.name}</h2>
+                <span class="role-badge">${user.role.toUpperCase()}</span>
+            </div>
+            <div class="profile-details">
+                <div class="detail-item">
+                    <label><i class="fas fa-id-badge"></i> ID</label>
+                    <span>${user.id}</span>
+                </div>
+                <div class="detail-item">
+                    <label><i class="fas fa-envelope"></i> Email</label>
+                    <span>${user.email}</span>
+                </div>
+                <div class="detail-item">
+                    <label><i class="fas fa-calendar-alt"></i> Member Since</label>
+                    <span>${patientInfo.joined || user.joined}</span>
+                </div>
+                <div class="detail-item">
+                    <label><i class="fas fa-chart-line"></i> Total Predictions</label>
+                    <span id="total-predictions-count">--</span>
+                </div>
+            </div>
+            <div class="history-section">
+                <h4><i class="fas fa-history"></i> Prediction History</h4>
+                <div id="history-list-container" class="history-list-container">
+                    <div class="loading-spinner"><i class="fas fa-spinner fa-spin"></i> Loading...</div>
+                </div>
+            </div>
+            <div class="profile-actions">
+                <button class="btn-primary" onclick="closeModal()">Close</button>
+                <button onclick="handleLogout()" class="btn-logout"><i class="fas fa-sign-out-alt"></i> Sign Out</button>
+            </div>
+        </div>
+    `;
+
+  await loadPatientHistory(user.email);
+}
+
+async function loadPatientHistory(email) {
+  const historyContainer = document.getElementById("history-list-container");
+  if (!historyContainer) return;
+
+  try {
+    const response = await fetch(`${BASE_URL}/patient/${encodeURIComponent(email)}/history`);
+    const data = await response.json();
+    const totalCountSpan = document.getElementById("total-predictions-count");
+    
+    if (data.history && data.history.length > 0) {
+      if (totalCountSpan) totalCountSpan.innerText = data.history.length;
+      
+      let historyHtml = '';
+      data.history.forEach((record) => {
+        let confidenceColor = "#10b981";
+        let confidenceText = "High";
+        if (record.confidence >= 80) {
+          confidenceColor = "#10b981";
+          confidenceText = "High";
+        } else if (record.confidence >= 60) {
+          confidenceColor = "#f59e0b";
+          confidenceText = "Medium";
+        } else {
+          confidenceColor = "#ef4444";
+          confidenceText = "Low";
+        }
+
+        historyHtml += `
+          <div class="history-record">
+            <div class="record-header">
+              <span class="record-date"><i class="far fa-calendar-alt"></i> ${record.date}</span>
+              <span class="record-confidence" style="background: ${confidenceColor};">${record.confidence}% ${confidenceText}</span>
+            </div>
+            <div class="record-disease">
+              <strong>Predicted Disease:</strong> ${record.disease}
+            </div>
+            <div class="record-symptoms">
+              <strong>Symptoms:</strong> ${record.symptoms.join(", ")}
+            </div>
+            <div class="record-remedies">
+              <strong><i class="fas fa-leaf"></i> Remedies:</strong>
+              <ul>
+                ${record.remedies.slice(0, 3).map(r => `<li>${r}</li>`).join("")}
+              </ul>
+            </div>
+          </div>
+        `;
+      });
+      historyContainer.innerHTML = historyHtml;
+    } else {
+      if (totalCountSpan) totalCountSpan.innerText = "0";
+      historyContainer.innerHTML = `
+        <div class="empty-history">
+          <i class="fas fa-clinic-medical"></i>
+          <p>No predictions yet</p>
+          <small>Try analyzing symptoms to see your history here!</small>
+        </div>
+      `;
+    }
+  } catch (error) {
+    console.error("History error:", error);
+    historyContainer.innerHTML = `
+      <div class="empty-history error">
+        <i class="fas fa-exclamation-triangle"></i>
+        <p>Unable to load history</p>
+        <small>Make sure the backend server is running.</small>
+      </div>
+    `;
   }
 }
 
@@ -234,17 +315,20 @@ function handleLogout() {
 function updateNavAfterLogin(user) {
   const container = document.getElementById("main-signin-btn");
   if (!container) return;
-  const initials = (user.name || user.id).split(" ").map((w) => w[0]).join("").toUpperCase().slice(0, 2);
+  const initials = (user.name || user.id)
+    .split(" ")
+    .map((w) => w[0])
+    .join("")
+    .toUpperCase()
+    .slice(0, 2);
   const iconCircle = container.querySelector(".profile-icon-circle");
-  if (iconCircle) {
-    iconCircle.innerHTML = `<span class="nav-initials">${initials}</span>`;
-    iconCircle.style.background = "linear-gradient(135deg, #4361ee, #7209b7)";
-  }
+  iconCircle.innerHTML = `<span class="nav-initials">${initials}</span>`;
+  iconCircle.style.background = "linear-gradient(135deg, #4361ee, #7209b7)";
   const label = container.querySelector(".nav-label");
-  if (label) label.textContent = user.id;
+  label.textContent = user.id;
+  container.classList.add("logged-in");
 }
 
-// Doctor Dashboard Search
 async function searchPatient() {
   const id = document.getElementById("patient-search-input").value.trim().toUpperCase();
   const resultArea = document.getElementById("patient-result-area");
@@ -258,26 +342,47 @@ async function searchPatient() {
 
   resultArea.style.display = "none";
   errorMsg.style.display = "block";
-  errorMsg.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Loading...';
+  errorMsg.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Loading patient records...';
 
   try {
-    const response = await fetch(`${BASE_URL}/patient/${encodeURIComponent(id)}/history`);
-    const data = await response.json();
+    const historyResponse = await fetch(`${BASE_URL}/patient/${encodeURIComponent(id)}/history`);
+    const historyData = await historyResponse.json();
 
-    if (data.history && data.history.length > 0) {
+    let patientName = id;
+    try {
+      const infoResponse = await fetch(`${BASE_URL}/patient/${encodeURIComponent(id)}/info`);
+      if (infoResponse.ok) {
+        const infoData = await infoResponse.json();
+        patientName = infoData.name || id;
+      }
+    } catch (e) {}
+
+    if (historyData.history && historyData.history.length > 0) {
       errorMsg.style.display = "none";
       tableBody.innerHTML = "";
 
-      document.getElementById("res-name").innerText = id;
-      document.getElementById("res-date").innerText = data.history[0]?.date || "N/A";
-      document.getElementById("total-records").innerText = data.history.length;
+      document.getElementById("res-name").innerText = patientName;
+      document.getElementById("res-date").innerText = historyData.history[0]?.date || "N/A";
+      document.getElementById("total-records").innerText = historyData.history.length;
 
-      let avgConf = data.history.reduce((s, r) => s + r.confidence, 0) / data.history.length;
-      document.getElementById("avg-confidence").innerHTML = `<span style="color: #10b981;">${avgConf.toFixed(1)}%</span>`;
+      let avgConfidence = historyData.history.reduce((sum, rec) => sum + rec.confidence, 0) / historyData.history.length;
+      document.getElementById("avg-confidence").innerHTML = `<span style="color: #10b981;">${avgConfidence.toFixed(1)}%</span>`;
 
-      data.history.forEach((rec) => {
-        let confColor = rec.confidence >= 80 ? "#10b981" : (rec.confidence >= 60 ? "#f59e0b" : "#ef4444");
-        let remediesHtml = rec.remedies.map(r => `<li>${r}</li>`).join('');
+      historyData.history.forEach((rec) => {
+        let confidenceColor = "#10b981";
+        let confidenceText = "High";
+        if (rec.confidence >= 80) {
+          confidenceColor = "#10b981";
+          confidenceText = "High";
+        } else if (rec.confidence >= 60) {
+          confidenceColor = "#f59e0b";
+          confidenceText = "Medium";
+        } else {
+          confidenceColor = "#ef4444";
+          confidenceText = "Low";
+        }
+
+        const remediesList = rec.remedies.map((r) => `• ${r}`).join("\n");
 
         tableBody.innerHTML += `
           <tr>
@@ -285,42 +390,65 @@ async function searchPatient() {
             <td style="max-width: 200px;">${rec.symptoms.join(", ")}</td>
             <td><strong>${rec.disease}</strong></td>
             <td>
-              <span style="background: ${confColor}; color: white; padding: 4px 8px; border-radius: 20px; font-size: 0.8rem;">${rec.confidence}%</span>
-              <div style="background: #e5e7eb; border-radius: 10px; height: 4px; margin-top: 5px; width: 80px;">
-                <div style="background: ${confColor}; width: ${rec.confidence}%; height: 4px; border-radius: 10px;"></div>
+              <span class="confidence-badge" style="background: ${confidenceColor};">${rec.confidence}% (${confidenceText})</span>
+              <div class="confidence-bar-small">
+                <div class="confidence-fill-small" style="width: ${rec.confidence}%; background: ${confidenceColor};"></div>
               </div>
-            </td>
+             </td>
             <td><span class="status-badge status-reviewed">Completed</span></td>
             <td>
-              <button onclick="showRemediesModal('${rec.disease.replace(/'/g, "\\'")}', \`${remediesHtml.replace(/`/g, "\\`")}\`)" style="background: var(--primary); color: white; border: none; padding: 6px 12px; border-radius: 6px; cursor: pointer;">
+              <button class="btn-view-remedies" onclick="showDetailedRemedies('${rec.disease.replace(/'/g, "\\'")}', \`${remediesList.replace(/`/g, "\\`")}\`)">
                 <i class="fas fa-leaf"></i> View
               </button>
-            </td>
+             </td>
           </tr>
         `;
       });
       resultArea.style.display = "block";
     } else {
-      errorMsg.innerHTML = `<i class="fas fa-exclamation-circle"></i> No records found for: ${id}`;
+      errorMsg.innerHTML = `
+        <i class="fas fa-exclamation-circle"></i> No records found for patient ID: ${id}<br>
+        <small>Make sure the patient has made predictions after logging in.</small>
+      `;
     }
   } catch (error) {
-    errorMsg.innerHTML = `<i class="fas fa-exclamation-circle"></i> Backend error. Make sure server is running.`;
+    console.error("Search error:", error);
+    errorMsg.innerHTML = `<i class="fas fa-exclamation-circle"></i> Backend error. Make sure server is running on port 5000.`;
   }
 }
 
-function showRemediesModal(disease, remediesHtml) {
+function showDetailedRemedies(disease, remediesText) {
   const modal = document.createElement("div");
-  modal.style.cssText = `position: fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.5); display:flex; justify-content:center; align-items:center; z-index:10000;`;
+  modal.className = "remedies-modal-overlay";
+  modal.style.cssText = `
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0,0,0,0.5);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 10000;
+  `;
+
   modal.innerHTML = `
-    <div style="background: white; padding: 30px; border-radius: 15px; max-width: 400px; width: 90%;">
-      <h3 style="color: var(--primary); margin-bottom: 15px;"><i class="fas fa-leaf"></i> Remedies for ${disease}</h3>
-      <ul style="margin: 20px 0;">${remediesHtml}</ul>
-      <div style="background: #fef3c7; padding: 10px; border-radius: 8px; margin: 15px 0;">
-        <small style="color: #92400e;"><i class="fas fa-exclamation-triangle"></i> Consult a doctor for proper medical advice.</small>
+    <div class="remedies-modal-content">
+      <div class="remedies-modal-header">
+        <h3><i class="fas fa-leaf"></i> Home Remedies for ${disease}</h3>
+        <button class="remedies-modal-close" onclick="this.closest('.remedies-modal-overlay').remove()">&times;</button>
       </div>
-      <button onclick="this.closest('div').parentElement.remove()" style="background: var(--primary); color: white; border: none; padding: 10px; border-radius: 8px; width: 100%; cursor: pointer;">Close</button>
+      <div class="remedies-modal-body">
+        ${remediesText.split("\n").map(r => `<p><i class="fas fa-check-circle"></i> ${r}</p>`).join("")}
+      </div>
+      <div class="remedies-modal-footer">
+        <small><i class="fas fa-exclamation-triangle"></i> Note: These are home remedies. Please consult a doctor for proper medical advice.</small>
+        <button onclick="this.closest('.remedies-modal-overlay').remove()" class="btn-close-remedies">Close</button>
+      </div>
     </div>
   `;
+
   document.body.appendChild(modal);
 }
 
@@ -350,12 +478,12 @@ if (contactForm) {
         setTimeout(() => {
           btn.innerText = originalText;
         }, 3000);
-      }
+      },
     );
   });
 }
 
-// MAIN PREDICTION FUNCTION
+// MAIN PREDICTION FUNCTION (Single version)
 async function runPrediction() {
   try {
     const selectedTags = document.querySelectorAll('.tag.active');
@@ -377,42 +505,50 @@ async function runPrediction() {
 
     const response = await fetch(`${BASE_URL}/predict`, {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ symptoms, patient_id })
+      headers: {
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify({ 
+        symptoms: symptoms,
+        patient_id: patient_id
+      })
     });
 
     const data = await response.json();
+    console.log("Prediction result:", data);
 
-    let confidenceColor = data.confidence >= 80 ? "#10b981" : (data.confidence >= 60 ? "#f59e0b" : "#ef4444");
+    let confidenceColor = "#10b981";
+    if (data.confidence < 80) confidenceColor = "#f59e0b";
+    if (data.confidence < 70) confidenceColor = "#ef4444";
 
     const resultHtml = `
-      <div class="prediction-result-overlay" onclick="if(event.target===this)this.remove()" style="position: fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.5); display:flex; justify-content:center; align-items:center; z-index:10000;">
-        <div style="background: white; padding: 30px; border-radius: 15px; max-width: 450px; width: 90%; max-height: 80vh; overflow-y: auto;">
-          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
-            <h3 style="color: var(--primary);"><i class="fas fa-microscope"></i> Analysis Result</h3>
-            <button onclick="this.closest('.prediction-result-overlay').remove()" style="background: none; border: none; font-size: 24px; cursor: pointer;">&times;</button>
+      <div class="prediction-result-overlay" onclick="if(event.target===this)this.remove()">
+        <div class="prediction-result-card">
+          <div class="result-header">
+            <h3><i class="fas fa-microscope"></i> Analysis Result</h3>
+            <button class="result-close" onclick="this.closest('.prediction-result-overlay').remove()">&times;</button>
           </div>
-          <div style="margin-bottom: 20px;">
-            <label style="font-weight: bold;">Predicted Disease</label>
-            <h2 style="color: ${confidenceColor}; margin-top: 5px;">${data.disease}</h2>
+          <div class="result-disease">
+            <label>Predicted Disease</label>
+            <h2 style="color: ${confidenceColor};">${data.disease}</h2>
           </div>
-          <div style="margin-bottom: 20px;">
-            <label style="font-weight: bold;">Confidence Level</label>
-            <div style="font-size: 24px; font-weight: bold; color: ${confidenceColor};">${data.confidence}%</div>
-            <div style="background: #e5e7eb; border-radius: 10px; height: 8px; margin-top: 5px;">
-              <div style="background: ${confidenceColor}; width: ${data.confidence}%; height: 8px; border-radius: 10px;"></div>
+          <div class="result-confidence">
+            <label>Confidence Level</label>
+            <div class="confidence-value" style="color: ${confidenceColor};">${data.confidence}%</div>
+            <div class="confidence-bar">
+              <div class="confidence-fill" style="width: ${data.confidence}%; background: ${confidenceColor};"></div>
             </div>
           </div>
-          <div style="margin-bottom: 20px;">
-            <label style="font-weight: bold;"><i class="fas fa-leaf"></i> Home Remedies</label>
-            <ul style="margin-top: 10px; padding-left: 20px;">
-              ${data.remedies.map(r => `<li style="margin: 8px 0;">${r}</li>`).join('')}
+          <div class="result-remedies">
+            <label><i class="fas fa-leaf"></i> Home Remedies</label>
+            <ul>
+              ${data.remedies.map(r => `<li>${r}</li>`).join("")}
             </ul>
           </div>
-          <div style="background: #fef3c7; padding: 10px; border-radius: 8px; margin: 15px 0;">
-            <small style="color: #92400e;"><i class="fas fa-exclamation-triangle"></i> This is an AI prediction. Please consult a doctor for proper medical advice.</small>
+          <div class="result-note">
+            <small><i class="fas fa-exclamation-triangle"></i> This is an AI prediction. Please consult a doctor for proper medical advice.</small>
           </div>
-          <button onclick="this.closest('.prediction-result-overlay').remove()" style="background: var(--primary); color: white; border: none; padding: 10px; border-radius: 8px; width: 100%; cursor: pointer;">Close</button>
+          <button class="btn-close-result" onclick="this.closest('.prediction-result-overlay').remove()">Close</button>
         </div>
       </div>
     `;
@@ -423,21 +559,10 @@ async function runPrediction() {
       const modal = document.getElementById("login-modal");
       if (modal && modal.style.display === "flex") {
         const savedUserData = JSON.parse(savedUser);
-        const res = await fetch(`${BASE_URL}/patient/${encodeURIComponent(savedUserData.email)}/history`);
-        const historyData = await res.json();
-        const list = document.getElementById("history-list");
-        if (list && historyData.history) {
-          list.innerHTML = historyData.history.map(rec => {
-            let confColor = rec.confidence >= 80 ? "#10b981" : (rec.confidence >= 60 ? "#f59e0b" : "#ef4444");
-            return `<div style="background: var(--glass); border: 1px solid var(--border); padding: 15px; border-radius: 12px; margin-bottom: 15px;">
-              <div style="display: flex; justify-content: space-between;"><span>${rec.date}</span><strong style="color: ${confColor};">${rec.confidence}%</strong></div>
-              <h4>${rec.disease}</h4>
-              <p style="font-size: 0.8rem;">Symptoms: ${rec.symptoms.join(', ')}</p>
-            </div>`;
-          }).join('');
-        }
+        await loadPatientHistory(savedUserData.email);
       }
     }
+    
   } catch (error) {
     console.error(error);
     alert("Prediction failed. Make sure the backend server is running on port 5000.");
@@ -458,9 +583,14 @@ window.addEventListener("load", () => {
   if (savedTheme) {
     document.body.setAttribute("data-theme", savedTheme);
     if (themeBtn)
-      themeBtn.innerHTML = savedTheme === "dark" ? '<i class="fas fa-sun"></i>' : '<i class="fas fa-moon"></i>';
+      themeBtn.innerHTML =
+        savedTheme === "dark"
+          ? '<i class="fas fa-sun"></i>'
+          : '<i class="fas fa-moon"></i>';
   }
-  const savedUser = localStorage.getItem("currentUser") || sessionStorage.getItem("currentUser");
+  const savedUser =
+    localStorage.getItem("currentUser") ||
+    sessionStorage.getItem("currentUser");
   if (savedUser) updateNavAfterLogin(JSON.parse(savedUser));
   attachTagListeners();
 
