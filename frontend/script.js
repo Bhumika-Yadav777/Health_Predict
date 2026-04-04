@@ -213,27 +213,80 @@ function searchPatient() {
         errorMsg.innerHTML = `<i class="fas fa-exclamation-circle"></i> No patient records found for ID: ${id}`;
     }
 }
+/* === SYMPTOM SELECTION LOGIC === */
+// Select all tags in the Common Symptoms box
+const symptomTags = document.querySelectorAll('.common-symptoms .tag');
 
-/* === 7. PREDICTION & SYMPTOMS (Optional Logic) === */
+symptomTags.forEach(tag => {
+    tag.addEventListener('click', () => {
+        // Toggle the 'active' class visually
+        tag.classList.toggle('active');
+        
+        // Optional: Log to console to verify it's working
+        const selected = Array.from(document.querySelectorAll('.tag.active'))
+                              .map(t => t.textContent.trim());
+        console.log("Current Selection:", selected);
+    });
+});
+/* === 7. PREDICTION & SYMPTOMS (Connected to Backend) === */
+/* === 7. PREDICTION & SYMPTOMS (Connected to Backend) === */
 const predictionBtn = document.querySelector('.btn-prediction');
-if (predictionBtn) {
-    predictionBtn.addEventListener('click', () => {
-        const selectedTags = Array.from(document.querySelectorAll('.tag.active')).map(t => t.textContent);
-        const historyText = document.querySelector('textarea[placeholder*="history"]')?.value.trim() || 
-                           document.querySelector('textarea').value.trim();
 
-        // Common symptoms are optional: need either a tag OR text history
+if (predictionBtn) {
+    predictionBtn.addEventListener('click', async () => {
+        // 1. Capture and Format Tags: "Skin Rash" -> "skin_rash"
+        const selectedTags = Array.from(document.querySelectorAll('.tag.active'))
+            .map(t => t.textContent.trim().toLowerCase().replace(/\s+/g, '_'));
+        
+        // 2. Capture additional text history
+        const historyText = document.querySelector('textarea')?.value.trim();
+
+        // Check if anything is selected
         if (selectedTags.length === 0 && !historyText) {
-            alert("Please select a symptom or describe your condition in the history box.");
+            alert("Please click on a symptom tag or describe your condition first.");
             return;
         }
 
-        predictionBtn.innerHTML = `<i class="fas fa-spinner fa-spin"></i> Processing...`;
-        
-        setTimeout(() => {
-            alert("Analysis Complete: Please check the dashboard or consult a doctor for details.");
-            predictionBtn.innerHTML = `Get Prediction <i class="fas fa-arrow-right"></i>`;
-        }, 2000);
+        // 3. Visual Loading State
+        predictionBtn.disabled = true;
+        const originalText = predictionBtn.innerHTML;
+        predictionBtn.innerHTML = `<i class="fas fa-spinner fa-spin"></i> Analyzing...`;
+
+        try {
+            console.log("Sending to backend:", selectedTags);
+
+            // 4. Send formatted data to your Flask Server
+            const response = await fetch('http://127.0.0.1:5000/predict', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ 
+                    symptoms: selectedTags,
+                    description: historyText 
+                })
+            });
+
+            const data = await response.json();
+
+            if (response.ok) {
+                // 5. Success! Show the disease and extra info from your CSVs
+                // This uses the 'disease', 'description', and 'precautions' sent from app.py
+                const message = `Prediction: ${data.disease}\n\nInfo: ${data.description || 'Consult a specialist.'}`;
+                alert(message);
+                
+                // If you have a specific UI div to show the result, update it here:
+                // document.getElementById('result-container').style.display = 'block';
+            } else {
+                alert("Server Error: " + (data.message || "Unknown error occurred."));
+            }
+
+        } catch (error) {
+            console.error("Connection Error:", error);
+            alert("Could not connect to the Python backend. Ensure app.py is running!");
+        } finally {
+            // 6. Reset Button
+            predictionBtn.disabled = false;
+            predictionBtn.innerHTML = originalText;
+        }
     });
 }
 

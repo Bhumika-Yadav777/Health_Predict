@@ -121,6 +121,21 @@
   font-family: "Inter", sans-serif;
 }
 
+/* Styling for selected symptoms */
+.tag.active {
+    background-color: #2563eb !important; /* Royal Blue */
+    color: white !important;
+    border-color: #1e40af;
+    transform: scale(1.05);
+    box-shadow: 0 2px 8px rgba(37, 99, 235, 0.4);
+}
+
+.tag {
+    cursor: pointer;
+    transition: all 0.2s ease;
+    user-select: none;
+}
+
 img {
   border-radius: 40%;
 }
