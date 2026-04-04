@@ -1,0 +1,379 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>HealthPredict</title>
+    <link rel="stylesheet" href="style.css" />
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"
+    />
+    <script
+      type="text/javascript"
+      src="https://cdn.jsdelivr.net/npm/@emailjs/browser@3/dist/email.min.js"
+    ></script>
+    <script type="text/javascript">
+      (function () {
+        // Replace "YOUR_PUBLIC_KEY" with the one from your EmailJS Account > API Keys
+        emailjs.init("f99c-CDS2yWKTqym9");
+      })();
+    </script>
+  </head>
+  <body data-theme="light">
+    <header>
+      <nav class="navbar">
+        <div class="brand-group">
+          <img src="./LOGO.jpeg" height="50" width="100" />
+          <div class="logo">HealthPredict</div>
+        </div>
+
+        <ul class="nav-links">
+          <li><a href="#home">Home</a></li>
+          <li><a href="#analysis">AI Analysis</a></li>
+          <li><a href="#how-it-works">How it Works</a></li>
+          <li><a href="#about">About Us</a></li>
+          <li><a href="#contact">Contact</a></li>
+        </ul>
+
+        <div class="nav-actions">
+          <button id="theme-toggle" class="btn-icon">
+            <i class="fas fa-sun"></i>
+          </button>
+
+          <div
+            id="main-signin-btn"
+            class="profile-nav-container"
+            onclick="openModal()"
+          >
+            <div class="profile-icon-circle">
+              <i class="fas fa-user-circle"></i>
+            </div>
+            <span class="nav-label">Sign In</span>
+          </div>
+        </div>
+      </nav>
+    </header>
+
+    <section id="home" class="hero">
+      <h1>Your Health, <span class="highlight">Decoded.</span></h1>
+      <p class="main">
+        Advanced machine learning algorithms analyze your symptoms to provide
+        instant health insights. Get personalized recommendations and make
+        informed decisions about your health.
+      </p>
+    </section>
+
+    <section id="analysis" class="container">
+      <div class="symptom-container">
+        <h2 class="heading">Symptom Analysis</h2>
+        <p class="subtitle">
+          Select or add your symptoms and provide additional information
+        </p>
+
+        <div class="section">
+          <h3>Common Symptoms</h3>
+          <div class="symptom-tags">
+            <button type="button" class="tag">Fever</button>
+            <button type="button" class="tag">Cough</button>
+            <button type="button" class="tag">Headache</button>
+            <button type="button" class="tag">Fatigue</button>
+            <button type="button" class="tag">Nausea</button>
+            <button type="button" class="tag">Vomiting</button>
+            <button type="button" class="tag">Diarrhea</button>
+            <button type="button" class="tag">Chest Pain</button>
+            <button type="button" class="tag">Shortness of Breath</button>
+            <button type="button" class="tag">Dizziness</button>
+            <button type="button" class="tag">Sore Throat</button>
+            <button type="button" class="tag">Body Aches</button>
+            <button type="button" class="tag">Chills</button>
+            <button type="button" class="tag">Loss of Appetite</button>
+          </div>
+        </div>
+
+        <div class="section">
+          <h3>Add Custom Symptom</h3>
+          <div class="input-group">
+            <input type="text" placeholder="Type a symptom..." />
+            <button class="add-btn">+</button>
+          </div>
+        </div>
+
+        <div class="flex-row">
+          <div class="input-field">
+            <label>Age (Optional)</label>
+            <input type="number" placeholder="Enter your age" />
+          </div>
+          <div class="input-field">
+            <label>Gender (Optional)</label>
+            <select>
+              <option value="" disabled selected>Select gender</option>
+              <option value="male">Male</option>
+              <option value="female">Female</option>
+              <option value="other">Other</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="section">
+          <label>Medical History (Optional)</label>
+          <textarea
+            placeholder="Any relevant medical conditions or history..."
+          ></textarea>
+        </div>
+        <button class="btn-prediction">
+          Get Prediction <i class="fas fa-arrow-right"></i>
+        </button>
+      </div>
+    </section>
+
+    <section id="how-it-works" class="container">
+      <h2 class="center">How It Works</h2>
+      <div class="info-grid">
+        <div class="info-item">
+          <i class="fas fa-microchip"></i>
+          <h4>Data Extraction</h4>
+          <p>
+            The user fills out a form entering symptoms like fever, cough, etc.
+            These inputs are converted into numerical values.
+          </p>
+        </div>
+        <div class="info-item">
+          <i class="fas fa-user-md"></i>
+          <h4>Data Processing</h4>
+          <p>
+            The symptom data is sent to the backend and fed into a Random Forest
+            ML model for analysis.
+          </p>
+        </div>
+        <div class="info-item">
+          <i class="fas fa-notes-medical"></i>
+          <h4>Result</h4>
+          <p>
+            The website displays the predicted disease, accuracy score, and
+            professional health advice.
+          </p>
+        </div>
+      </div>
+    </section>
+
+    <section id="doctor-dashboard" class="container">
+      <div class="glass-card dashboard-container">
+        <div class="dashboard-header">
+          <h2><i class="fas fa-user-md"></i> Doctor Dashboard</h2>
+          <p class="subtitle">
+            Enter Patient ID to retrieve medical history and prediction records.
+          </p>
+        </div>
+
+        <div class="search-box-group">
+          <input
+            type="text"
+            id="patient-search-input"
+            placeholder="Enter Patient ID (e.g., P101, P102)..."
+          />
+          <button class="btn-search" onclick="searchPatient()">
+            <i class="fas fa-search"></i> Search
+          </button>
+        </div>
+
+        <div id="patient-result-area" style="display: none">
+          <div class="patient-info-summary">
+            <p><strong>Patient Name:</strong> <span id="res-name">--</span></p>
+            <p><strong>Last Visit:</strong> <span id="res-date">--</span></p>
+          </div>
+
+          <div class="table-responsive">
+            <table class="record-table">
+              <thead>
+                <tr>
+                  <th>Date</th>
+                  <th>Symptoms Analyzed</th>
+                  <th>Predicted Disease</th>
+                  <th>Confidence</th>
+                  <th>Status</th>
+                </tr>
+              </thead>
+              <tbody id="patient-record-body"></tbody>
+            </table>
+          </div>
+        </div>
+
+        <div
+          id="no-result-msg"
+          style="
+            display: none;
+            color: #e63946;
+            text-align: center;
+            margin-top: 20px;
+          "
+        >
+          <i class="fas fa-exclamation-circle"></i> No patient found with that
+          ID.
+        </div>
+      </div>
+    </section>
+
+    <section id="about" class="container about-section">
+      <div class="glass-card">
+        <h2>About HealthPredict</h2>
+        <p>
+          HealthPredict is a smart healthcare platform that helps detect
+          diseases early using Artificial Intelligence and Machine Learning. It
+          combines AI, cloud computing, and web technology to create a secure
+          digital healthcare assistant.
+        </p>
+      </div>
+    </section>
+
+    <section id="contact" class="container">
+      <div class="contact-wrapper">
+        <div class="contact-details">
+          <h2>Contact Us</h2>
+          <p><i class="fas fa-envelope"></i> healthpredict.us@gmail.com</p>
+          <p><i class="fas fa-phone"></i> 9595565211</p>
+        </div>
+        <form class="contact-form glass-card">
+          <input
+            type="text"
+            name="title"
+            placeholder="Subject/Topic"
+            required
+          />
+          <input
+            type="text"
+            name="name"
+            placeholder="Your Full Name"
+            required
+          />
+          <input
+            type="email"
+            name="email"
+            placeholder="Your Email Address"
+            required
+          />
+
+          <textarea
+            name="message"
+            rows="5"
+            placeholder="How can we help you today?"
+            required
+          ></textarea>
+
+          <button type="submit" class="btn-primary">Send Message</button>
+        </form>
+      </div>
+    </section>
+    <div id="login-modal" class="modal">
+      <div class="modal-content glass-card auth-container"></div>
+    </div>
+
+    <section id="faqs" class="container">
+      <h2 class="center">
+        Frequently Asked <span class="highlight">Health Questions</span>
+      </h2>
+      <div class="faq-wrapper">
+        <div class="faq-item glass-card">
+          <div class="faq-question" onclick="toggleFAQ(this)">
+            <span>How accurate are predictions?</span>
+            <i class="fas fa-plus"></i>
+          </div>
+          <div class="faq-answer">
+            <p>
+              Our AI models are trained on extensive clinical datasets,
+              achieving high accuracy. However, they are for informational
+              purposes and not a substitute for professional medical advice.
+            </p>
+          </div>
+        </div>
+
+        <div class="faq-item glass-card">
+          <div class="faq-question" onclick="toggleFAQ(this)">
+            <span>Can I use it daily?</span>
+            <i class="fas fa-plus"></i>
+          </div>
+          <div class="faq-answer">
+            <p>
+              Yes, you can track symptoms daily to monitor changes in your
+              health over time.
+            </p>
+          </div>
+        </div>
+
+        <div class="faq-item glass-card">
+          <div class="faq-question" onclick="toggleFAQ(this)">
+            <span>Is my data kept private?</span>
+            <i class="fas fa-plus"></i>
+          </div>
+          <div class="faq-answer">
+            <p>
+              Absolutely. We use end-to-end encryption and industry-standard
+              security protocols to ensure your health data remains
+              confidential.
+            </p>
+          </div>
+        </div>
+
+        <div class="faq-item glass-card">
+          <div class="faq-question" onclick="toggleFAQ(this)">
+            <span>Are remedies safe?</span>
+            <i class="fas fa-plus"></i>
+          </div>
+          <div class="faq-answer">
+            <p>
+              Suggested remedies are based on standard health guidelines. Always
+              consult with a healthcare provider before starting new treatments.
+            </p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <footer class="main-footer">
+      <div class="container footer-content">
+        <div class="footer-brand">
+          <div class="logo">HealthPredict</div>
+          <p>(866) 988-4504</p>
+          <p>support@healthpredict.com</p>
+          <button class="btn-outline" onclick="location.href = '#contact'">
+            Contact Us
+          </button>
+        </div>
+
+        <div class="footer-links">
+          <div class="link-group">
+            <h4>About us</h4>
+            <a href="#">Careers</a>
+            <a href="#">Locations</a>
+            <a href="#faqs">FAQs</a>
+          </div>
+          <div class="link-group">
+            <h4>Patients</h4>
+            <a href="#how-it-works">How it works</a>
+            <a href="#">New patient registration</a>
+            <a href="#">Online payment</a>
+          </div>
+          <div class="link-group">
+            <h4>Partners</h4>
+            <a href="#">Service</a>
+            <a href="#">News and blog</a>
+            <a href="#contact">Contact us</a>
+          </div>
+        </div>
+      </div>
+      <div class="footer-bottom container">
+        <p>&copy; 2026. All Rights Reserved.</p>
+        <div class="footer-legal">
+          <a href="#">Privacy policy & Terms of use</a>
+        </div>
+        <div class="social-icons">
+          <i class="fab fa-linkedin"></i>
+          <i class="fab fa-facebook"></i>
+          <i class="fab fa-instagram"></i>
+        </div>
+      </div>
+    </footer>
+
+    <script src="script.js"></script>
+  </body>
+</html>

@@ -1,0 +1,1028 @@
+[data-theme="dark"] {
+  --bg: #151927;
+  --text: #f8fafc; /* Near white */
+  --glass: rgba(30, 41, 59, 0.7);
+  --border: rgba(255, 255, 255, 0.1);
+}
+
+/* Global Fix for all headings and paragraphs in Dark Mode */
+[data-theme="dark"] h1,
+[data-theme="dark"] h2,
+[data-theme="dark"] h3,
+[data-theme="dark"] p {
+  color: var(--text) !important;
+}
+
+:root {
+  /* Original brand colors */
+  --primary: #4361ee;
+  --secondary: #3f37c9;
+
+  /* Light Mode */
+  --bg: #f7f7f7;
+  --text: #1c283a;
+  --glass: #a4c1c7;
+  --border: rgba(67, 97, 238, 0.1);
+}
+
+:root {
+  --primary: #468faf; /* HealthPredict Blue */
+  --secondary: #3f37c9;
+  --bg: #f7f7f7;
+  --text: #1c283a;
+  --glass: rgba(255, 255, 255, 0.8);
+  --border: rgba(70, 143, 175, 0.15);
+  --transition: all 0.3s ease;
+}
+
+[data-theme="dark"] {
+  --bg: #0f172a; /* Deeper Navy */
+  --text: #f8fafc;
+  --glass: rgba(30, 41, 59, 0.7);
+  --border: rgba(255, 255, 255, 0.1);
+}
+/* Universal Dark Mode Text Visibility */
+[data-theme="dark"] body,
+[data-theme="dark"] .glass-card,
+[data-theme="dark"] .faq-item,
+[data-theme="dark"] input,
+[data-theme="dark"] textarea {
+    color: var(--text);
+}
+
+[data-theme="dark"] input::placeholder {
+    color: #94a3b8;
+}
+
+[data-theme="dark"] .symptom-container {
+    background: var(--glass);
+    border: 1px solid var(--border);
+}
+
+[data-theme="dark"] .tag {
+    background: rgba(255, 255, 255, 0.05);
+    color: #cbd5e1; /* Light grey text */
+    border-color: var(--border);
+}
+
+[data-theme="dark"] .tag:hover {
+    background: rgba(255, 255, 255, 0.1);
+}
+
+[data-theme="dark"] .symptom-container h2, 
+[data-theme="dark"] .symptom-container h3,
+[data-theme="dark"] .symptom-container label {
+    color: #ffffff !important;
+}
+[data-theme="dark"] .faq-item {
+    background: #1e293b; /* Darker navy for the cards */
+    border: 1px solid var(--border);
+}
+
+[data-theme="dark"] .faq-question {
+    color: #f8fafc;
+}
+
+[data-theme="dark"] .faq-answer {
+    background: rgba(0, 0, 0, 0.2);
+    color: #cbd5e1;
+}
+[data-theme="dark"] .main-footer {
+    background: #0f172a; /* Deep navy */
+    border-top: 1px solid var(--border);
+    color: #f8fafc;
+}
+
+[data-theme="dark"] .footer-col h4 {
+    color: var(--primary);
+}
+
+[data-theme="dark"] .footer-col a,
+[data-theme="dark"] .footer-brand p {
+    color: #94a3b8; /* Dimmed text for links */
+}
+
+[data-theme="dark"] .footer-col a:hover {
+    color: white;
+}
+/* Safety rule for all dark mode text */
+[data-theme="dark"] h1, 
+[data-theme="dark"] h2, 
+[data-theme="dark"] h3, 
+[data-theme="dark"] label, 
+[data-theme="dark"] p {
+    color: #f8fafc !important;
+}
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+  font-family: "Inter", sans-serif;
+}
+
+img {
+  border-radius: 40%;
+}
+
+body {
+  background-color: var(--bg);
+  background-image:
+    radial-gradient(at 0% 0%, rgba(41, 45, 62, 0.03) 0px, transparent 50%),
+    radial-gradient(at 100% 100%, rgba(27, 193, 18, 0.03) 0px, transparent 50%);
+  background-attachment: fixed;
+  color: var(--text);
+  transition: background 0.3s ease;
+  line-height: 1.6;
+}
+
+.container {
+  max-width: 1000px;
+  margin: 40px auto;
+  padding: 20px;
+}
+.center {
+  text-align: center;
+  margin-bottom: 30px;
+}
+
+/* Login Modal Specifics */
+.auth-input {
+    width: 100%;
+    padding: 12px;
+    margin: 8px 0;
+    border-radius: 8px;
+    border: 1px solid var(--border);
+    background: var(--glass);
+    color: var(--text);
+}
+
+.profile-avatar {
+    width: 80px;
+    height: 80px;
+    background: linear-gradient(135deg, var(--primary), #7209b7);
+    color: white;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.8rem;
+    font-weight: bold;
+    margin: 0 auto 20px;
+    box-shadow: 0 10px 20px rgba(0,0,0,0.1);
+}
+
+/* Navigation Badge */
+.nav-initials-circle {
+    background: var(--primary);
+    color: white;
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: bold;
+    font-size: 0.9rem;
+    cursor: pointer;
+    transition: transform 0.2s;
+}
+
+.nav-initials-circle:hover {
+    transform: scale(1.1);
+}
+
+.profile-nav-container {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    cursor: pointer;
+    padding: 5px 12px;
+    border-radius: 50px;
+    transition: background 0.3s;
+    border: 1px solid var(--border);
+}
+
+.profile-nav-container:hover {
+    background: var(--glass);
+}
+
+.profile-icon-circle {
+    width: 35px;
+    height: 35px;
+    background: var(--primary);
+    color: white;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.2rem;
+}
+
+.nav-label {
+    font-size: 0.9rem;
+    font-weight: 600;
+    color: var(--text);
+}
+
+/* When logged in, we style the initials specifically */
+.nav-initials {
+    font-size: 0.85rem;
+    font-weight: bold;
+    letter-spacing: 0.5px;
+}
+/* --- Profile Modal Styling --- */
+.profile-card {
+    padding: 20px 10px;
+    text-align: center;
+}
+
+.navbar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 15px 5%;
+  background: var(--glass);
+  backdrop-filter: blur(20px);
+  position: sticky;
+  top: 0;
+  z-index: 1000;
+  border-bottom: 1px solid var(--border);
+}
+
+.nav-links {
+  display: flex;
+  list-style: none;
+  gap: 30px;
+  align-items: center;
+}
+
+.nav-links a {
+  text-decoration: none;
+  color: var(--text);
+  font-weight: 700;
+  font-size: 0.95rem;
+}
+
+.nav-actions {
+  display: flex;
+  align-items: center;
+  gap: 15px;
+}
+
+/* The Blue Pill Button from your Image */
+.btn-contact-nav {
+  background: var(--primary);
+  color: white !important;
+  padding: 10px 22px;
+  border-radius: 6px;
+  font-weight: 700;
+  text-transform: uppercase;
+  font-size: 0.85rem;
+}
+
+
+.profile-avatar-large {
+    width: 90px;
+    height: 90px;
+    background: linear-gradient(135deg, var(--primary), #7209b7);
+    color: white;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 2rem;
+    font-weight: 800;
+    margin: 0 auto 15px;
+    box-shadow: 0 8px 15px rgba(0,0,0,0.1);
+}
+
+.role-badge {
+    background: rgba(67, 97, 238, 0.1);
+    color: var(--primary);
+    padding: 5px 15px;
+    border-radius: 20px;
+    font-size: 0.75rem;
+    font-weight: 700;
+    letter-spacing: 1px;
+}
+
+.profile-details {
+    margin: 25px 0;
+    text-align: left;
+    background: var(--glass);
+    padding: 15px;
+    border-radius: 12px;
+    border: 1px solid var(--border);
+}
+
+.detail-item {
+    margin-bottom: 15px;
+}
+
+.detail-item:last-child {
+    margin-bottom: 0;
+}
+
+.detail-item label {
+    display: block;
+    font-size: 0.75rem;
+    color: var(--text);
+    opacity: 0.6;
+    margin-bottom: 4px;
+}
+
+.detail-item span {
+    font-weight: 600;
+    color: var(--text);
+    font-size: 1rem;
+}
+
+.btn-logout {
+    background: transparent;
+    color: #ef4444;
+    border: 1px solid #ef4444;
+    padding: 10px 20px;
+    border-radius: 8px;
+    cursor: pointer;
+    font-weight: 600;
+    margin-top: 10px;
+    width: 100%;
+    transition: 0.3s;
+}
+
+.btn-logout:hover {
+    background: #ef4444;
+    color: white;
+}
+
+/* Navbar */
+/* Updated Navbar Layout */
+.navbar {
+  display: flex;
+  justify-content: flex-end; /* Aligns items to the right */
+  align-items: center;
+  padding: 10px 5%;
+  background: var(--glass);
+  backdrop-filter: blur(100px);
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  border-bottom: 2px solid var(--border);
+}
+
+/* This pushes the logo group to the far left corner */
+.brand-group {
+  display: flex;
+  align-items: center;
+  gap: 15px;
+  margin-right: auto;
+}
+
+.logo {
+  font-weight: 800;
+  font-size: 1.8rem;
+  color: var(--text);
+}
+
+/* Container for the links */
+.nav-links {
+  display: flex;
+  list-style: none;
+  gap: 30px; /* More breathing room between links */
+  margin-right: 40px;
+  align-items: center;
+}
+
+/* Individual Link Styling */
+.nav-links li a {
+  text-decoration: none;
+  color: var(--text);
+  font-weight: 600;
+  font-size: 0.95rem;
+  position: relative;
+  padding: 8px 12px;
+  transition: all 0.3s ease;
+  border-radius: 8px;
+}
+
+/* Hover Background Tint */
+.nav-links li a:hover {
+  color: var(--primary);
+  background: rgba(67, 97, 238, 0.05); /* Very light blue tint */
+}
+
+/* The Sliding Underline Effect */
+.nav-links li a::after {
+  content: "";
+  position: absolute;
+  width: 0;
+  height: 2px;
+  bottom: 0;
+  left: 50%;
+  background-color: var(--primary);
+  transition: all 0.3s ease-in-out;
+  transform: translateX(-50%);
+  border-radius: 2px;
+}
+
+.nav-links li a:hover::after {
+  width: 70%; /* Line grows to 70% of the text width on hover */
+}
+
+/* Active State (Optional: if you want the link to stay highlighted when on that section) */
+.nav-links li a:active {
+  transform: scale(0.95);
+}
+
+/* Enlarge Buttons */
+#theme-toggle {
+  background: transparent;
+  color: var(--text);
+  font-size: 1.4rem; /* Bigger icon */
+  padding: 10px;
+  margin-right: 15px;
+}
+
+.btn-signin {
+  background: var(--primary);
+  color: white;
+  padding: 12px 28px; /* Bigger padding */
+  font-size: 1.1rem; /* Bigger text */
+  font-weight: 700;
+  border-radius: 12px;
+  box-shadow: 0 4px 15px rgba(67, 97, 238, 0.2);
+}
+
+.btn-signin:hover {
+  transform: translateY(-2px);
+  background: var(--secondary);
+}
+
+.auth-tabs {
+  display: flex;
+  justify-content: space-around;
+  margin-bottom: 25px;
+  border-bottom: 1px solid var(--border);
+}
+
+.tab-btn {
+  background: none;
+  padding: 10px 20px;
+  font-weight: 600;
+  color: var(--text);
+  opacity: 0.6;
+}
+
+.tab-btn.active {
+  opacity: 1;
+  border-bottom: 3px solid var(--primary);
+}
+
+.role-selection {
+  margin-bottom: 15px;
+  text-align: left;
+}
+
+.radio-group {
+  display: flex;
+  gap: 15px;
+  margin-top: 5px;
+}
+
+.radio-group label {
+  font-weight: normal;
+  cursor: pointer;
+}
+
+.remember-group {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 15px;
+  font-size: 0.85rem;
+}
+
+.remember-group input {
+  width: auto;
+  margin: 0;
+}
+
+/* Ensure tabs look clickable */
+.auth-tabs {
+  display: flex;
+  gap: 10px;
+  margin-bottom: 20px;
+  border-bottom: 1px solid var(--border);
+}
+
+.tab-btn {
+  flex: 1;
+  padding: 12px;
+  background: none;
+  border: none;
+  color: var(--text);
+  font-weight: 600;
+  cursor: pointer;
+  transition: 0.3s;
+  opacity: 0.5;
+  border-bottom: 3px solid transparent;
+}
+
+/* This is what changes when switchAuth runs */
+.tab-btn.active {
+  opacity: 1;
+  border-bottom: 3px solid var(--primary);
+  color: var(--primary);
+}
+
+.tab-btn:hover {
+  opacity: 0.8;
+}
+
+/* Hero */
+.hero {
+  text-align: center;
+  padding: 150px 20px;
+}
+.hero h1 {
+  font-size: 4rem;
+  margin-bottom: 10px;
+}
+.highlight {
+  color: var(--primary);
+}
+.main {
+  max-width: 700px;
+  margin: 20px auto;
+}
+/* Base Hero State */
+#home.hero {
+  text-align: center;
+  padding: 180px 20px;
+  position: relative;
+  overflow: hidden;
+  /* Transition set to 2 seconds for a soft entry/exit */
+  transition:
+    background 2s ease,
+    transform 0.5s ease;
+
+  background-color: var(--bg);
+  background-image:
+    radial-gradient(at 0% 0%, rgba(67, 97, 238, 0.1) 0px, transparent 50%),
+    radial-gradient(at 100% 100%, rgba(114, 9, 183, 0.1) 0px, transparent 50%);
+}
+
+/* Hover Interaction: Animation stays for 2s, then stays fixed */
+#home.hero:hover {
+  background-color: #f0f4ff; /* Light Mode Hover */
+  background-image:
+    radial-gradient(at 100% 0%, rgba(67, 97, 238, 0.15) 0px, transparent 50%),
+    radial-gradient(at 0% 100%, rgba(114, 9, 183, 0.15) 0px, transparent 50%);
+}
+
+/* DARK MODE FIX: High Contrast */
+[data-theme="dark"] #home.hero {
+  background-color: #1a1f36; /* Deep Navy to keep text visible */
+  background-image:
+    radial-gradient(at 0% 0%, rgba(67, 97, 238, 0.2) 0px, transparent 50%),
+    radial-gradient(at 100% 100%, rgba(114, 9, 183, 0.2) 0px, transparent 50%);
+}
+
+/* Dark Mode Hover Fix: Prevents text from disappearing */
+[data-theme="dark"] #home.hero:hover {
+  background-color: #21294a; /* Slightly lighter navy but still dark */
+  color: #f1f5f9 !important; /* Forces text to remain bright */
+}
+
+/* Ensure Title is always visible in Dark Mode */
+[data-theme="dark"] .hero h1,
+[data-theme="dark"] .hero p.main {
+  color: #ffffff; /* Absolute white for maximum readability */
+}
+
+/* The Highlight effect fix */
+.highlight {
+  background: linear-gradient(90deg, var(--primary), #7209b7);
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+  color: var(--primary); /* Fallback for older browsers */
+  display: inline-block;
+}
+
+/* Symptom Analysis Box */
+.symptom-container {
+  background: rgb(255, 255, 255);
+  padding: 30px;
+  border-radius: 12px;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+  color: #1c283a;
+}
+.symptom-container {
+    background: var(--glass);
+    backdrop-filter: blur(15px);
+    padding: 30px;
+    border-radius: 12px;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+    border: 1px solid var(--border);
+}
+/* Ensure tags look good in both modes */
+.tag {
+    padding: 10px 18px;
+    border: 1px solid var(--border);
+    background: rgba(255, 255, 255, 0.05);
+    color: var(--text);
+    border-radius: 8px;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.tag.active {
+    background: var(--primary);
+    color: white;
+    border-color: var(--primary);
+}
+
+/* Form inputs consistency */
+input, select, textarea {
+    background: rgba(255, 255, 255, 0.05);
+    color: var(--text);
+    border: 1px solid var(--border);
+}
+
+.symptom-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-bottom: 20px;
+}
+.tag {
+  padding: 10px 18px;
+  border: 1px solid #e2e8f0;
+  background: white;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+.tag.active {
+  background: #eff6ff;
+  border-color: #3b82f6;
+  color: #1d4ed8;
+}
+
+/* Form Elements */
+input,
+select,
+textarea {
+  width: 100%;
+  padding: 12px;
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+  margin-bottom: 15px;
+  outline: none;
+}
+.flex-row {
+  display: flex;
+  gap: 20px;
+  margin-bottom: 25px;
+}
+.input-field {
+  flex: 1;
+}
+
+/* Info Grid (How It Works) */
+.info-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 20px;
+  margin-top: 30px;
+}
+.info-item {
+  text-align: center;
+  padding: 20px;
+}
+.info-item i {
+  font-size: 2rem;
+  color: var(--primary);
+  margin-bottom: 15px;
+}
+
+/* Glass Cards */
+.glass-card {
+  background: var(--glass);
+  backdrop-filter: blur(15px);
+  border: 1px solid var(--border);
+  border-radius: 20px;
+  padding: 30px;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.05);
+}
+
+/* Contact Wrapper */
+.contact-wrapper {
+  display: flex;
+  gap: 40px;
+  justify-content: space-between;
+}
+.contact-form {
+  flex: 1;
+}
+
+/* MODAL FIX - Added centering logic */
+.modal {
+  display: none;
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0, 0, 0, 0.4);
+  justify-content: center;
+  align-items: center;
+  z-index: 1000;
+}
+.modal-content {
+  width: 350px;
+  position: relative;
+}
+.close {
+  position: absolute;
+  right: 20px;
+  top: 15px;
+  cursor: pointer;
+  font-size: 1.5rem;
+}
+
+/* Buttons */
+button {
+  cursor: pointer;
+  transition: 0.2s;
+  border: none;
+}
+.btn-primary {
+  background: var(--primary);
+  color: white;
+  padding: 12px;
+  border-radius: 10px;
+  width: 100%;
+  font-weight: 600;
+}
+.btn-prediction {
+  width: 100%;
+  padding: 15px;
+  background: #a2b4fd;
+  color: white;
+  border-radius: 12px;
+  font-weight: 700;
+  margin-top: 10px;
+}
+.btn-prediction:hover {
+  background: #8ba2ff;
+  transform: scale(1.01);
+}
+
+/* Doctor Dashboard Specifics */
+.dashboard-container {
+  border-top: 4px solid var(--primary);
+}
+
+.search-box-group {
+  display: flex;
+  gap: 15px;
+  margin: 25px 0;
+}
+
+.btn-search {
+  background: var(--primary);
+  color: white;
+  padding: 0 25px;
+  border-radius: 8px;
+  font-weight: 600;
+  transition: 0.3s;
+}
+
+.btn-search:hover {
+  background: var(--secondary);
+  transform: translateY(-2px);
+}
+
+.patient-info-summary {
+  display: flex;
+  gap: 30px;
+  padding: 15px;
+  background: rgba(67, 97, 238, 0.05);
+  border-radius: 10px;
+  margin-bottom: 20px;
+}
+
+/* Table Styling */
+.table-responsive {
+  overflow-x: auto;
+}
+
+.record-table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: 10px;
+}
+
+.record-table th {
+  text-align: left;
+  padding: 12px;
+  background: var(--primary);
+  color: white;
+}
+
+.record-table td {
+  padding: 12px;
+  border-bottom: 1px solid var(--border);
+}
+
+[data-theme="dark"] .record-table td {
+  color: #f1f5f9;
+}
+
+.status-badge {
+  padding: 4px 10px;
+  border-radius: 20px;
+  font-size: 0.8rem;
+  font-weight: 600;
+}
+
+.status-reviewed {
+  background: #d1fae5;
+  color: #065f46;
+}
+.status-pending {
+  background: #fef3c7;
+  color: #92400e;
+}
+
+.user-badge {
+  background: var(--glass);
+  border: 1px solid var(--primary);
+  color: var(--primary);
+  padding: 10px 20px;
+  border-radius: 12px;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  cursor: pointer;
+  transition: 0.3s;
+}
+
+.user-badge i {
+  font-size: 1.1rem;
+}
+
+.user-badge:hover {
+  background: var(--primary);
+  color: white;
+}
+
+[data-theme="dark"] .user-badge {
+  background: rgba(67, 97, 238, 0.2);
+  border-color: var(--primary);
+  color: #ffffff;
+}
+
+/* FAQ Styling */
+.faq-wrapper {
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+    max-width: 800px;
+    margin: 0 auto;
+}
+
+.faq-item {
+    padding: 0 !important; /* Overriding glass-card padding */
+    overflow: hidden;
+}
+
+.faq-question {
+    padding: 20px 30px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    cursor: pointer;
+    font-weight: 600;
+    color: var(--text);
+}
+
+.faq-question i {
+    color: var(--primary);
+    transition: transform 0.3s ease;
+}
+
+.faq-answer {
+    max-height: 0;
+    overflow: hidden;
+    transition: max-height 0.3s ease, padding 0.3s ease;
+    background: rgba(67, 97, 238, 0.03);
+    padding: 0 30px;
+}
+
+.faq-item.active .faq-answer {
+    max-height: 200px;
+    padding: 20px 30px;
+}
+
+.faq-item.active .faq-question i {
+    transform: rotate(45deg);
+}
+
+/* Footer Styling */
+.main-footer {
+    background: var(--glass);
+    border-top: 1px solid var(--border);
+    padding: 60px 0 20px;
+    margin-top: 80px;
+}
+
+.footer-content {
+    display: flex;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 40px;
+}
+
+.footer-brand .logo {
+    font-size: 2rem;
+    margin-bottom: 15px;
+}
+
+.footer-brand p {
+    margin-bottom: 8px;
+    opacity: 0.8;
+}
+
+.footer-links {
+    display: flex;
+    gap: 60px;
+}
+
+.link-group h4 {
+    margin-bottom: 20px;
+    color: var(--primary);
+    font-size: 1.1rem;
+}
+
+.link-group a {
+    display: block;
+    text-decoration: none;
+    color: var(--text);
+    margin-bottom: 12px;
+    opacity: 0.7;
+    transition: 0.3s;
+    font-size: 0.95rem;
+}
+
+.link-group a:hover {
+    opacity: 1;
+    color: var(--primary);
+}
+
+.main-footer {
+  background: #fffcf2; /* Cream background from your screenshot */
+  padding: 80px 10% 40px;
+  border-top: 2px solid #f0ead2;
+  color: #1c283a;
+}
+
+[data-theme="dark"] .main-footer {
+  background: #10141d;
+  border-top-color: var(--border);
+}
+
+.footer-grid {
+  display: grid;
+  grid-template-columns: 2fr 1fr 1fr 1fr;
+  gap: 40px;
+  margin-bottom: 60px;
+}
+
+.footer-brand h2 { color: var(--primary); margin-bottom: 20px; }
+
+.footer-col h4 {
+  margin-bottom: 25px;
+  font-weight: 800;
+}
+
+.footer-col a {
+  display: block;
+  text-decoration: none;
+  color: inherit;
+  margin-bottom: 15px;
+  font-size: 0.9rem;
+  opacity: 0.8;
+}
+
+.footer-bottom {
+  display: flex;
+  justify-content: space-between;
+  padding-top: 30px;
+  border-top: 1px solid rgba(0,0,0,0.1);
+  font-size: 0.85rem;
+}
