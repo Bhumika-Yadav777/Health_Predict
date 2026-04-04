@@ -1033,6 +1033,52 @@ button {
   color: #ffffff;
 }
 
+/* Result Styling */
+.confidence-bar {
+    background: rgba(0,0,0,0.1);
+    height: 12px;
+    border-radius: 6px;
+    overflow: hidden;
+    margin-top: 10px;
+}
+.confidence-fill {
+    height: 100%;
+    transition: width 1s ease-in-out;
+}
+
+/* Scrollbar for History */
+.history-scroll-area::-webkit-scrollbar {
+    width: 5px;
+}
+.history-scroll-area::-webkit-scrollbar-thumb {
+    background: var(--primary);
+    border-radius: 10px;
+}
+
+/* Layout for Modal Dashboard */
+.dashboard-split-container {
+    background: var(--bg);
+    border-radius: 20px;
+}
+
+[data-theme="dark"] .dashboard-split-container {
+    background: #1e293b;
+}
+
+.detail-item label {
+    font-size: 0.7rem;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    opacity: 0.6;
+    display: block;
+}
+
+.detail-item span {
+    font-weight: 700;
+    margin-bottom: 15px;
+    display: block;
+}
+
 /* FAQ Styling */
 .faq-wrapper {
     display: flex;
