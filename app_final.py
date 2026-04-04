@@ -8,6 +8,7 @@ import json
 from datetime import datetime
 import os
 import pandas as pd
+import re
 
 app = Flask(__name__)
 app.config['SECRET_KEY'] = 'your-secret-key-here'
@@ -38,6 +39,28 @@ class Prediction(db.Model):
 model = None
 features = []
 disease_remedies = {}
+symptom_mapping = {
+    'fever': 'high_fever',
+    'cough': 'cough',
+    'headache': 'headache',
+    'fatigue': 'fatigue',
+    'nausea': 'nausea',
+    'vomiting': 'vomiting',
+    'diarrhea': 'diarrhoea',
+    'chest pain': 'chest_pain',
+    'shortness of breath': 'breathlessness',
+    'dizziness': 'dizziness',
+    'sore throat': 'throat_irritation',
+    'body aches': 'muscle_pain',
+    'chills': 'chills',
+    'loss of appetite': 'loss_of_appetite',
+    'runny nose': 'runny_nose',
+    'sneezing': 'continuous_sneezing',
+    'itching': 'itching',
+    'skin rash': 'skin_rash',
+    'joint pain': 'joint_pain',
+    'stomach pain': 'stomach_pain'
+}
 
 # Load disease remedies from CSV
 try:
@@ -47,7 +70,7 @@ try:
             disease = row['Disease']
             disease_remedies[disease] = {
                 'remedies': [row['HomeRemedy1'], row['HomeRemedy2'], row['HomeRemedy3'], row['HomeRemedy4']],
-                'confidence_boost': 0.85  # Base confidence for known diseases
+                'confidence_boost': 0.85
             }
         print(f"✅ Loaded remedies for {len(disease_remedies)} diseases")
     else:
@@ -66,33 +89,50 @@ try:
 except Exception as e:
     print(f"❌ Error loading model: {e}")
 
+def map_symptom(symptom):
+    """Map common symptom names to model symptom names"""
+    symptom_lower = symptom.lower().strip()
+    # Check direct mapping
+    if symptom_lower in symptom_mapping:
+        return symptom_mapping[symptom_lower]
+    # Check if it's already in model features
+    symptom_clean = symptom_lower.replace(" ", "_")
+    if symptom_clean in features:
+        return symptom_clean
+    # Try partial matching
+    for key in symptom_mapping:
+        if key in symptom_lower or symptom_lower in key:
+            return symptom_mapping[key]
+    return None
+
 def calculate_confidence(symptoms, predicted_disease, model_proba=None):
-    """Calculate confidence percentage between 70-95% based on symptom match and model probability"""
+    """Calculate confidence percentage between 70-95%"""
     try:
-        base_confidence = 70.0  # Start at 70% minimum
+        # Base confidence starts at 70%
+        confidence = 70.0
         
-        # Factor 1: Model probability (if available) - contributes up to 15%
+        # Factor 1: Number of symptoms (more symptoms = higher confidence)
+        # Max +10% for 5+ symptoms
+        symptom_boost = min(10, (len(symptoms) / 10) * 10)
+        confidence += symptom_boost
+        
+        # Factor 2: Model probability boost (if available)
         if model_proba is not None and len(model_proba) > 0:
-            prob_score = float(max(model_proba[0]) * 15)  # Max 15% boost
-            base_confidence += prob_score
+            max_proba = max(model_proba[0]) * 100
+            proba_boost = min(10, max_proba / 10)
+            confidence += proba_boost
         
-        # Factor 2: Number of symptoms matched - contributes up to 10%
-        # More symptoms = higher confidence
-        matched_count = len([s for s in symptoms if s.replace("_", " ") in predicted_disease.lower()])
-        symptom_boost = min(10, (matched_count / max(len(symptoms), 1)) * 10)
-        base_confidence += symptom_boost
-        
-        # Factor 3: Known disease in remedies database gets a small boost
+        # Factor 3: Known disease bonus
         if predicted_disease in disease_remedies:
-            base_confidence += 5  # +5% for known diseases
+            confidence += 5
         
         # Ensure confidence stays between 70 and 95
-        confidence = min(max(base_confidence, 70.0), 95.0)
+        confidence = min(max(confidence, 70.0), 95.0)
         return round(confidence, 1)
         
     except Exception as e:
         print(f"Confidence calculation error: {e}")
-        return 75.0  # Default fallback
+        return 75.0
 
 @app.route('/predict', methods=['POST'])
 def predict():
@@ -104,19 +144,34 @@ def predict():
         user_selections = data.get('symptoms', [])
         patient_id = data.get('patient_id', None)
         
-        # Create input vector
+        print(f"Received symptoms: {user_selections}")
+        
+        # Map symptoms to model features
+        mapped_symptoms = []
         input_vector = np.zeros(len(features))
-        matched_symptoms = []
+        
         for s in user_selections:
-            s_clean = s.strip().lower().replace(" ", "_")
-            if s_clean in features:
-                input_vector[features.index(s_clean)] = 1
-                matched_symptoms.append(s_clean)
+            mapped = map_symptom(s)
+            if mapped and mapped in features:
+                input_vector[features.index(mapped)] = 1
+                mapped_symptoms.append(mapped)
+                print(f"  Mapped: {s} -> {mapped}")
+            else:
+                print(f"  Could not map: {s}")
         
-        # Predict and get probabilities
+        # If no symptoms mapped, try direct matching
+        if len(mapped_symptoms) == 0:
+            for s in user_selections:
+                s_clean = s.lower().strip().replace(" ", "_")
+                if s_clean in features:
+                    input_vector[features.index(s_clean)] = 1
+                    mapped_symptoms.append(s_clean)
+        
+        # Predict
         prediction = model.predict([input_vector])[0]
+        print(f"Prediction: {prediction}")
         
-        # Get prediction probabilities for confidence
+        # Get probabilities for confidence
         try:
             probabilities = model.predict_proba([input_vector])
             confidence = calculate_confidence(user_selections, prediction, probabilities)
@@ -149,18 +204,20 @@ def predict():
             "confidence": confidence,
             "remedies": remedies,
             "saved": saved,
-            "matched_symptoms_count": len(matched_symptoms),
+            "matched_symptoms_count": len(mapped_symptoms),
             "total_symptoms": len(user_selections),
             "message": "Prediction completed" + (" and saved!" if saved else "")
         })
         
     except Exception as e:
         print(f"Prediction error: {e}")
+        import traceback
+        traceback.print_exc()
         return jsonify({"error": str(e), "disease": "Error in prediction"}), 200
 
 @app.route('/patient/<patient_id>/history', methods=['GET'])
 def get_patient_history(patient_id):
-    """Get all predictions with confidence and remedies for a patient"""
+    """Get all predictions for a patient"""
     predictions = Prediction.query.filter_by(patient_id=patient_id).order_by(Prediction.created_at.desc()).all()
     
     history = []
@@ -170,7 +227,6 @@ def get_patient_history(patient_id):
         except:
             symptoms_list = []
         
-        # Get remedies for this disease
         remedies = disease_remedies.get(pred.predicted_disease, {}).get('remedies', 
             ['Consult doctor', 'Rest properly', 'Stay hydrated', 'Monitor symptoms'])
         
@@ -184,6 +240,28 @@ def get_patient_history(patient_id):
         })
     
     return jsonify({"history": history})
+
+@app.route('/register', methods=['POST'])
+def register():
+    try:
+        data = request.json
+        email = data.get('email')
+        password = data.get('password')
+        name = data.get('name')
+        role = data.get('role', 'patient')
+        
+        existing = User.query.filter_by(email=email).first()
+        if existing:
+            return jsonify({"error": "Email already registered"}), 400
+        
+        new_user = User(email=email, password=password, name=name, role=role)
+        db.session.add(new_user)
+        db.session.commit()
+        
+        return jsonify({"message": "User registered successfully", "user_id": new_user.id}), 200
+    except Exception as e:
+        print(f"Register error: {e}")
+        return jsonify({"error": str(e)}), 500
 
 @app.route('/health', methods=['GET'])
 def health():
