@@ -127,15 +127,34 @@
       </div>
     </section>
     
-
-<div id="prediction-result" class="result-container" style="display: none;">
-    <div class="result-card">
-        <h3><i class="fas fa-microscope"></i> Analysis Result</h3>
-        <p id="disease-name"></p>
-        <div id="confidence-level"></div>
-        <div id="remedies-list"></div>
+<section id="prediction-result" class="container glass-card" style="display: none; margin-top: 50px;">
+    <div class="result-header" style="text-align: center; margin-bottom: 30px;">
+        <span class="role-badge">AI ANALYSIS COMPLETE</span>
+        <div id="disease-name"></div>
     </div>
-</div>
+
+    <div class="result-grid" style="display: grid; grid-template-columns: 1fr 1fr; gap: 40px; align-items: start;">
+        <div class="confidence-box">
+            <h4 style="margin-bottom: 15px;"><i class="fas fa-chart-line"></i> Match Confidence</h4>
+            <div id="confidence-level"></div>
+            <p style="font-size: 0.85rem; opacity: 0.7; margin-top: 10px;">
+                Our Random Forest model calculated this probability based on your reported symptoms.
+            </p>
+        </div>
+
+        <div class="remedies-box">
+            <h4 style="margin-bottom: 15px;"><i class="fas fa-hand-holding-medical"></i> Recommended Actions</h4>
+            <div id="remedies-list">
+                </div>
+        </div>
+    </div>
+
+    <div style="background: rgba(245, 158, 11, 0.1); border-radius: 12px; padding: 15px; margin-top: 30px; border: 1px solid rgba(245, 158, 11, 0.3);">
+        <small style="color: #d97706; display: block; text-align: center;">
+            <i class="fas fa-exclamation-triangle"></i> <strong>Disclaimer:</strong> This is an automated preliminary assessment. It is not a substitute for professional medical diagnosis. Please consult a healthcare provider.
+        </small>
+    </div>
+</section>
 
     <section id="how-it-works" class="container">
       <h2 class="center">How It Works</h2>
