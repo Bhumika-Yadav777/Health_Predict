@@ -132,7 +132,8 @@
     <div class="result-card">
         <h3><i class="fas fa-microscope"></i> Analysis Result</h3>
         <p id="disease-name"></p>
-        <div id="precaution-list"></div>
+        <div id="confidence-level"></div>
+        <div id="remedies-list"></div>
     </div>
 </div>
 
@@ -194,14 +195,16 @@
 
           <div class="table-responsive">
             <table class="record-table">
-              <thead>
-                <tr>
-                  <th>Date</th>
-                  <th>Symptoms Analyzed</th>
-                  <th>Predicted Disease</th>
-                  <th>Confidence</th>
-                  <th>Status</th>
-                </tr>
+             <thead>
+    <tr>
+        <th>Date</th>
+        <th>Symptoms Analyzed</th>
+        <th>Predicted Disease</th>
+        <th>Confidence</th>
+        <th>Status</th>
+        <th>Remedies</th>
+    </tr>
+</thead>
               </thead>
               <tbody id="patient-record-body"></tbody>
             </table>
