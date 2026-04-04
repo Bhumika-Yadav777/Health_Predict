@@ -621,6 +621,66 @@ body {
     color: var(--primary);
     margin-bottom: 10px;
 }
+/* Confidence and Remedies Styling */
+.confidence-bar {
+    background: #e5e7eb;
+    border-radius: 10px;
+    height: 8px;
+    margin-top: 5px;
+    width: 100%;
+    overflow: hidden;
+}
+
+.confidence-fill {
+    height: 100%;
+    border-radius: 10px;
+    transition: width 0.5s ease;
+}
+
+.confidence-high { background: #10b981; }
+.confidence-medium { background: #f59e0b; }
+.confidence-low { background: #ef4444; }
+
+.remedies-list {
+    list-style: none;
+    padding-left: 0;
+}
+
+.remedies-list li {
+    margin-bottom: 8px;
+    padding-left: 20px;
+    position: relative;
+}
+
+.remedies-list li:before {
+    content: "✓";
+    position: absolute;
+    left: 0;
+    color: var(--primary);
+}
+
+.btn-remedies {
+    background: var(--primary);
+    color: white;
+    border: none;
+    padding: 5px 12px;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 0.8rem;
+    transition: transform 0.2s;
+}
+
+.btn-remedies:hover {
+    transform: scale(1.05);
+}
+
+.history-item-confidence {
+    display: inline-block;
+    padding: 2px 8px;
+    border-radius: 12px;
+    font-size: 0.75rem;
+    font-weight: bold;
+}
 
 @keyframes fadeIn {
     from { opacity: 0; transform: translateY(10px); }
