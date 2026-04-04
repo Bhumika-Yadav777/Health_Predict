@@ -92,6 +92,8 @@ async function runPrediction() {
     const btn = document.querySelector('.btn-prediction');
     const resultDiv = document.getElementById('prediction-result');
     const diseaseText = document.getElementById('disease-name');
+    const confidenceDiv = document.getElementById('confidence-level');
+    const remediesDiv = document.getElementById('remedies-list');
     
     if (!resultDiv || !diseaseText) return;
     
@@ -123,13 +125,43 @@ async function runPrediction() {
 
         if (response.ok) {
             resultDiv.style.display = 'block';
+            
+            // Show disease name
             diseaseText.innerHTML = `<strong>Potential Condition:</strong> ${data.disease}`;
             
+            // Show confidence with color coding
+            let confidenceColor = '#10b981'; // Green for high confidence
+            if (data.confidence < 70) confidenceColor = '#f59e0b'; // Orange for medium
+            if (data.confidence < 55) confidenceColor = '#ef4444'; // Red for low
+            
+            if (confidenceDiv) {
+                confidenceDiv.innerHTML = `
+                    <div style="margin-top: 10px;">
+                        <strong>Confidence:</strong> 
+                        <span style="color: ${confidenceColor}; font-weight: bold;">${data.confidence}%</span>
+                        <div style="background: #e5e7eb; border-radius: 10px; height: 8px; margin-top: 5px; width: 100%;">
+                            <div style="background: ${confidenceColor}; width: ${data.confidence}%; height: 8px; border-radius: 10px;"></div>
+                        </div>
+                    </div>
+                `;
+            }
+            
+            // Show home remedies
+            if (remediesDiv && data.remedies) {
+                let remediesHtml = '<div style="margin-top: 15px;"><strong><i class="fas fa-leaf"></i> Home Remedies:</strong><ul style="margin-top: 8px;">';
+                data.remedies.forEach(remedy => {
+                    remediesHtml += `<li style="margin-bottom: 5px;">✓ ${remedy}</li>`;
+                });
+                remediesHtml += '</ul></div>';
+                remediesDiv.innerHTML = remediesHtml;
+            }
+            
+            // Show save confirmation
             if (data.saved) {
                 const saveMsg = document.createElement('p');
                 saveMsg.className = 'save-confirmation';
                 saveMsg.style.cssText = 'color: #10b981; margin-top: 10px; padding: 8px; background: rgba(16, 185, 129, 0.1); border-radius: 8px;';
-                saveMsg.innerHTML = '<i class="fas fa-check-circle"></i> Result saved to your history';
+                saveMsg.innerHTML = '<i class="fas fa-check-circle"></i> ✓ Result saved to your history';
                 resultDiv.appendChild(saveMsg);
                 setTimeout(() => saveMsg.remove(), 3000);
             } else if (!patientId) {
@@ -140,6 +172,7 @@ async function runPrediction() {
                 resultDiv.appendChild(loginMsg);
                 setTimeout(() => loginMsg.remove(), 4000);
             }
+            
             resultDiv.scrollIntoView({ behavior: 'smooth' });
         } else {
             alert("Error: " + (data.error || "Unknown error"));
@@ -151,7 +184,6 @@ async function runPrediction() {
         btn.innerHTML = 'Analyze Symptoms <i class="fas fa-arrow-right"></i>';
     }
 }
-
 // Auth Submit
 function handleAuthSubmit(e, mode) {
     e.preventDefault();
@@ -214,7 +246,7 @@ function handleAuthSubmit(e, mode) {
     }
 }
 
-// Profile View
+// Updated Profile View with Confidence and Remedies
 async function showProfileView(user) {
     const content = document.querySelector('.modal-content');
     if (!content) return;
@@ -243,7 +275,7 @@ async function showProfileView(user) {
                     <span>${user.joined || 'April 2026'}</span>
                 </div>
             </div>
-            <div class="history-section" style="margin-top: 20px;"><h4>Loading history...</h4></div>
+            <div class="history-section" style="margin-top: 20px;"><h4><i class="fas fa-spinner fa-spin"></i> Loading history...</h4></div>
             <div class="profile-actions">
                 <button class="btn-primary" onclick="closeModal()">Close</button>
                 <button onclick="handleLogout()" class="btn-logout"><i class="fas fa-sign-out-alt"></i> Sign Out</button>
@@ -255,21 +287,32 @@ async function showProfileView(user) {
         const response = await fetch(`http://127.0.0.1:5000/patient/${encodeURIComponent(user.email)}/history`);
         const data = await response.json();
         const historySection = content.querySelector('.history-section');
+        
         if (data.history && data.history.length > 0) {
             let historyHtml = '<h4><i class="fas fa-history"></i> Recent Predictions</h4>';
             data.history.slice(0, 5).forEach(record => {
-                historyHtml += `<div style="border-bottom:1px solid var(--border); padding:10px 0;">
-                    <div style="font-size:0.8rem; color:var(--primary);">${record.date}</div>
-                    <div><strong>Disease:</strong> ${record.disease}</div>
-                    <div style="font-size:0.8rem;">Symptoms: ${record.symptoms.join(', ')}</div>
-                </div>`;
+                let confidenceColor = '#10b981';
+                if (record.confidence < 70) confidenceColor = '#f59e0b';
+                if (record.confidence < 55) confidenceColor = '#ef4444';
+                
+                historyHtml += `
+                    <div style="border-bottom:1px solid var(--border); padding:10px 0;">
+                        <div style="font-size:0.8rem; color:var(--primary);">${record.date}</div>
+                        <div><strong>Disease:</strong> ${record.disease}</div>
+                        <div><strong>Confidence:</strong> <span style="color: ${confidenceColor}; font-weight: bold;">${record.confidence}%</span></div>
+                        <div style="font-size:0.8rem;"><strong>Symptoms:</strong> ${record.symptoms.join(', ')}</div>
+                        <div style="font-size:0.8rem; margin-top: 5px;"><strong><i class="fas fa-leaf"></i> Remedies:</strong> ${record.remedies.slice(0, 2).join('; ')}</div>
+                    </div>
+                `;
             });
             historySection.innerHTML = historyHtml;
         } else {
-            historySection.innerHTML = '<h4><i class="fas fa-history"></i> Recent Predictions</h4><p>No predictions yet.</p>';
+            historySection.innerHTML = '<h4><i class="fas fa-history"></i> Recent Predictions</h4><p>No predictions yet. Try analyzing symptoms!</p>';
         }
     } catch (error) {
         console.error("History error:", error);
+        const historySection = content.querySelector('.history-section');
+        historySection.innerHTML = '<h4><i class="fas fa-history"></i> Recent Predictions</h4><p style="color: #ef4444;">Unable to load history. Make sure backend is running.</p>';
     }
 }
 
@@ -292,15 +335,21 @@ function updateNavAfterLogin(user) {
 }
 
 // Doctor Dashboard
+// Updated Doctor Dashboard Search Function
 async function searchPatient() {
     const id = document.getElementById('patient-search-input').value.trim().toUpperCase();
     const resultArea = document.getElementById('patient-result-area');
     const errorMsg = document.getElementById('no-result-msg');
     const tableBody = document.getElementById('patient-record-body');
 
+    if (!id) {
+        alert("Please enter a Patient ID");
+        return;
+    }
+
     resultArea.style.display = 'none';
     errorMsg.style.display = 'block';
-    errorMsg.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Searching...';
+    errorMsg.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Loading patient records...';
 
     try {
         const response = await fetch(`http://127.0.0.1:5000/patient/${encodeURIComponent(id)}/history`);
@@ -311,16 +360,58 @@ async function searchPatient() {
             tableBody.innerHTML = '';
             document.getElementById('res-name').innerText = id;
             document.getElementById('res-date').innerText = data.history[0]?.date || 'N/A';
+            
             data.history.forEach(rec => {
-                tableBody.innerHTML += `<tr><td>${rec.date}</td><td>${rec.symptoms.join(', ')}</td><td>${rec.disease}</td><td>High</td><td><span class="status-badge status-reviewed">Analyzed</span></td></tr>`;
+                // Confidence badge color
+                let confidenceColor = '#10b981';
+                let confidenceText = 'High';
+                if (rec.confidence < 70) {
+                    confidenceColor = '#f59e0b';
+                    confidenceText = 'Medium';
+                }
+                if (rec.confidence < 55) {
+                    confidenceColor = '#ef4444';
+                    confidenceText = 'Low';
+                }
+                
+                // Remedies as tooltip or small text
+                const remediesText = rec.remedies.slice(0, 2).join(', ');
+                
+                tableBody.innerHTML += `
+                    <tr>
+                        <td>${rec.date}</td>
+                        <td>${rec.symptoms.join(', ')}</td>
+                        <td><strong>${rec.disease}</strong></td>
+                        <td>
+                            <span style="background: ${confidenceColor}; color: white; padding: 4px 8px; border-radius: 20px; font-size: 0.8rem;">
+                                ${rec.confidence}% (${confidenceText})
+                            </span>
+                        </td>
+                        <td>
+                            <span class="status-badge status-reviewed">Analyzed</span>
+                        </td>
+                        <td>
+                            <button onclick="showRemedies('${rec.disease.replace(/'/g, "\\'")}', '${remediesText.replace(/'/g, "\\'")}')" 
+                                    style="background: var(--primary); color: white; border: none; padding: 4px 10px; border-radius: 5px; cursor: pointer;">
+                                <i class="fas fa-leaf"></i> Remedies
+                            </button>
+                        </td>
+                    </tr>
+                `;
             });
             resultArea.style.display = 'block';
         } else {
             errorMsg.innerHTML = `<i class="fas fa-exclamation-circle"></i> No records found for patient ID: ${id}`;
         }
     } catch (error) {
+        console.error("Search error:", error);
         errorMsg.innerHTML = `<i class="fas fa-exclamation-circle"></i> Backend error. Make sure server is running.`;
     }
+}
+
+// Function to show remedies modal
+function showRemedies(disease, remediesPreview) {
+    alert(`💊 Home Remedies for ${disease}:\n\n${remediesPreview}\n\nPlease consult a doctor for proper medical advice.`);
 }
 
 // Contact Form
