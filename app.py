@@ -4,9 +4,9 @@ from flask_cors import CORS
 import joblib
 import numpy as np
 import pandas as pd
-
+from flask_cors import CORS
 app = Flask(__name__)
-CORS(app)
+CORS(app) # This must be here!
 
 # Database Setup
 app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///database.db'
