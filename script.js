@@ -336,6 +336,7 @@ function updateNavAfterLogin(user) {
 
 // Doctor Dashboard
 // Updated Doctor Dashboard Search Function
+// Enhanced Doctor Dashboard Search Function
 async function searchPatient() {
     const id = document.getElementById('patient-search-input').value.trim().toUpperCase();
     const resultArea = document.getElementById('patient-result-area');
@@ -343,7 +344,7 @@ async function searchPatient() {
     const tableBody = document.getElementById('patient-record-body');
 
     if (!id) {
-        alert("Please enter a Patient ID");
+        alert("Please enter a Patient ID (e.g., P101)");
         return;
     }
 
@@ -358,42 +359,51 @@ async function searchPatient() {
         if (data.history && data.history.length > 0) {
             errorMsg.style.display = 'none';
             tableBody.innerHTML = '';
+            
+            // Update patient info
             document.getElementById('res-name').innerText = id;
             document.getElementById('res-date').innerText = data.history[0]?.date || 'N/A';
+            document.getElementById('total-records').innerText = data.history.length;
             
-            data.history.forEach(rec => {
+            // Calculate average confidence
+            let avgConfidence = data.history.reduce((sum, rec) => sum + rec.confidence, 0) / data.history.length;
+            document.getElementById('avg-confidence').innerHTML = `<span style="color: #10b981;">${avgConfidence.toFixed(1)}%</span>`;
+            
+            // Display each record
+            data.history.forEach((rec, index) => {
                 // Confidence badge color
                 let confidenceColor = '#10b981';
                 let confidenceText = 'High';
-                if (rec.confidence < 70) {
+                if (rec.confidence < 80) {
                     confidenceColor = '#f59e0b';
                     confidenceText = 'Medium';
                 }
-                if (rec.confidence < 55) {
+                if (rec.confidence < 75) {
                     confidenceColor = '#ef4444';
-                    confidenceText = 'Low';
+                    confidenceText = 'Good';
                 }
                 
-                // Remedies as tooltip or small text
-                const remediesText = rec.remedies.slice(0, 2).join(', ');
+                // Remedies for this record
+                const remediesList = rec.remedies.map(r => `• ${r}`).join('\n');
                 
                 tableBody.innerHTML += `
                     <tr>
                         <td>${rec.date}</td>
-                        <td>${rec.symptoms.join(', ')}</td>
+                        <td style="max-width: 200px;">${rec.symptoms.join(', ')}</td>
                         <td><strong>${rec.disease}</strong></td>
                         <td>
                             <span style="background: ${confidenceColor}; color: white; padding: 4px 8px; border-radius: 20px; font-size: 0.8rem;">
                                 ${rec.confidence}% (${confidenceText})
                             </span>
+                            <div style="background: #e5e7eb; border-radius: 10px; height: 4px; margin-top: 5px; width: 80px;">
+                                <div style="background: ${confidenceColor}; width: ${rec.confidence}%; height: 4px; border-radius: 10px;"></div>
+                            </div>
                         </td>
+                        <td><span class="status-badge status-reviewed">Completed</span></td>
                         <td>
-                            <span class="status-badge status-reviewed">Analyzed</span>
-                        </td>
-                        <td>
-                            <button onclick="showRemedies('${rec.disease.replace(/'/g, "\\'")}', '${remediesText.replace(/'/g, "\\'")}')" 
-                                    style="background: var(--primary); color: white; border: none; padding: 4px 10px; border-radius: 5px; cursor: pointer;">
-                                <i class="fas fa-leaf"></i> Remedies
+                            <button onclick="showDetailedRemedies('${rec.disease.replace(/'/g, "\\'")}', \`${remediesList.replace(/`/g, '\\`')}\`)" 
+                                    style="background: var(--primary); color: white; border: none; padding: 6px 12px; border-radius: 6px; cursor: pointer; font-size: 0.8rem;">
+                                <i class="fas fa-leaf"></i> View Remedies
                             </button>
                         </td>
                     </tr>
@@ -401,17 +411,52 @@ async function searchPatient() {
             });
             resultArea.style.display = 'block';
         } else {
-            errorMsg.innerHTML = `<i class="fas fa-exclamation-circle"></i> No records found for patient ID: ${id}`;
+            errorMsg.innerHTML = `<i class="fas fa-exclamation-circle"></i> No records found for patient ID: ${id}<br><small>Make sure the patient has made predictions after logging in.</small>`;
         }
     } catch (error) {
         console.error("Search error:", error);
-        errorMsg.innerHTML = `<i class="fas fa-exclamation-circle"></i> Backend error. Make sure server is running.`;
+        errorMsg.innerHTML = `<i class="fas fa-exclamation-circle"></i> Backend error. Make sure server is running on port 5000.`;
     }
 }
 
-// Function to show remedies modal
-function showRemedies(disease, remediesPreview) {
-    alert(`💊 Home Remedies for ${disease}:\n\n${remediesPreview}\n\nPlease consult a doctor for proper medical advice.`);
+// Function to show detailed remedies modal
+function showDetailedRemedies(disease, remediesText) {
+    // Create modal for remedies
+    const modal = document.createElement('div');
+    modal.style.cssText = `
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: rgba(0,0,0,0.5);
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        z-index: 10000;
+    `;
+    
+    modal.innerHTML = `
+        <div style="background: white; padding: 30px; border-radius: 15px; max-width: 400px; width: 90%;">
+            <h3 style="color: var(--primary); margin-bottom: 15px;">
+                <i class="fas fa-leaf"></i> Home Remedies for ${disease}
+            </h3>
+            <div style="margin: 20px 0;">
+                ${remediesText.split('\n').map(r => `<p style="margin: 10px 0;">${r}</p>`).join('')}
+            </div>
+            <div style="background: #fef3c7; padding: 10px; border-radius: 8px; margin: 15px 0;">
+                <small style="color: #92400e;">
+                    <i class="fas fa-exclamation-triangle"></i> Note: These are home remedies. Please consult a doctor for proper medical advice.
+                </small>
+            </div>
+            <button onclick="this.closest('div').parentElement.remove()" 
+                    style="background: var(--primary); color: white; border: none; padding: 10px 20px; border-radius: 8px; cursor: pointer; width: 100%;">
+                Close
+            </button>
+        </div>
+    `;
+    
+    document.body.appendChild(modal);
 }
 
 // Contact Form
