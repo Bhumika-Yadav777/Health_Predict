@@ -67,24 +67,32 @@ except Exception as e:
     print(f"❌ Error loading model: {e}")
 
 def calculate_confidence(symptoms, predicted_disease, model_proba=None):
-    """Calculate confidence percentage based on symptom match and model probability"""
+    """Calculate confidence percentage between 70-95% based on symptom match and model probability"""
     try:
-        if model_proba is not None and len(model_proba) > 0:
-            # Use model's probability if available
-            confidence = float(max(model_proba[0]) * 100)
-        else:
-            # Calculate based on symptom-disease matching
-            confidence = 65.0  # Base confidence
-            
-            # Boost confidence for known diseases with remedies
-            if predicted_disease in disease_remedies:
-                confidence += disease_remedies[predicted_disease].get('confidence_boost', 0) * 100
+        base_confidence = 70.0  # Start at 70% minimum
         
-        # Ensure confidence is between 0 and 100
-        confidence = min(max(confidence, 50.0), 98.0)
+        # Factor 1: Model probability (if available) - contributes up to 15%
+        if model_proba is not None and len(model_proba) > 0:
+            prob_score = float(max(model_proba[0]) * 15)  # Max 15% boost
+            base_confidence += prob_score
+        
+        # Factor 2: Number of symptoms matched - contributes up to 10%
+        # More symptoms = higher confidence
+        matched_count = len([s for s in symptoms if s.replace("_", " ") in predicted_disease.lower()])
+        symptom_boost = min(10, (matched_count / max(len(symptoms), 1)) * 10)
+        base_confidence += symptom_boost
+        
+        # Factor 3: Known disease in remedies database gets a small boost
+        if predicted_disease in disease_remedies:
+            base_confidence += 5  # +5% for known diseases
+        
+        # Ensure confidence stays between 70 and 95
+        confidence = min(max(base_confidence, 70.0), 95.0)
         return round(confidence, 1)
-    except:
-        return 75.0  # Default confidence
+        
+    except Exception as e:
+        print(f"Confidence calculation error: {e}")
+        return 75.0  # Default fallback
 
 @app.route('/predict', methods=['POST'])
 def predict():
