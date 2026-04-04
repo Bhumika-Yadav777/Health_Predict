@@ -2,25 +2,46 @@ const BASE_URL = "http://127.0.0.1:5000";
 let currentLoggedInUser = null;
 
 // --- PREDICTION LOGIC ---
+// --- 1. SHOW PREDICTION IN MODAL ---
 async function runPrediction() {
+    const selectedTags = document.querySelectorAll('.tag.active');
+    const symptoms = Array.from(selectedTags).map(tag => tag.textContent);
+    
+    // Get the current logged-in user's email to save the record
+    const savedUser = JSON.parse(localStorage.getItem("currentUser") || "{}");
+    const patient_id = savedUser.id || "Guest"; // Uses the ID like P999
+
     try {
-        const selectedTags = document.querySelectorAll('.tag.active');
-        const symptoms = Array.from(selectedTags).map(tag => tag.textContent);
-
-        if (symptoms.length === 0) {
-            alert("Please select at least one symptom");
-            return;
-        }
-
-        const savedUser = localStorage.getItem("currentUser") || sessionStorage.getItem("currentUser");
-        let patient_id = savedUser ? JSON.parse(savedUser).email : null;
-
-        // Show loading state on button if you have one
         const response = await fetch(`${BASE_URL}/predict`, {
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({ symptoms, patient_id })
         });
+        const data = await response.json();
+
+        // Update Modal Content
+        document.getElementById("modal-disease-name").textContent = data.disease;
+        document.getElementById("modal-confidence-text").textContent = data.confidence + "%";
+        
+        const bar = document.getElementById("modal-confidence-bar");
+        bar.style.width = data.confidence + "%";
+        bar.style.backgroundColor = data.confidence > 70 ? "#10b981" : "#f59e0b";
+
+        const list = document.getElementById("modal-remedies-list");
+        list.innerHTML = data.remedies.map(r => `
+            <li style="margin-bottom: 8px; display: flex; align-items: center; gap: 10px;">
+                <span style="color: var(--primary);">•</span> ${r}
+            </li>
+        `).join('');
+
+        // Show Modal
+        document.getElementById("resultModal").style.display = "flex";
+    } catch (e) { alert("Error connecting to server."); }
+}
+
+function closeResultModal() {
+    document.getElementById("resultModal").style.display = "none";
+}
 
         const data = await response.json();
 
@@ -442,16 +463,38 @@ function updateNavAfterLogin(user) {
   container.classList.add("logged-in");
 }
 
+// --- 2. DOCTOR DASHBOARD SEARCH FIX ---
 async function searchPatient() {
-  const id = document.getElementById("patient-search-input").value.trim().toUpperCase();
-  const resultArea = document.getElementById("patient-result-area");
-  const errorMsg = document.getElementById("no-result-msg");
-  const tableBody = document.getElementById("patient-record-body");
+    const searchId = document.getElementById("patient-search-id").value.trim();
+    if (!searchId) return alert("Enter a Patient ID (e.g., P999)");
 
-  if (!id) {
-    alert("Please enter a Patient ID (e.g., P101)");
-    return;
-  }
+    try {
+        // We fetch history based on the ID entered in the search box
+        const res = await fetch(`${BASE_URL}/patient/${encodeURIComponent(searchId)}/history`);
+        const data = await res.json();
+        
+        const tableBody = document.getElementById("doctor-record-table-body");
+        
+        if (data.history && data.history.length > 0) {
+            tableBody.innerHTML = data.history.map(rec => `
+                <tr>
+                    <td>${rec.date}</td>
+                    <td><strong>${rec.disease}</strong></td>
+                    <td>${rec.symptoms.join(", ")}</td>
+                    <td><span class="status-badge status-reviewed">${rec.confidence}% Match</span></td>
+                </tr>
+            `).join('');
+            
+            // Update the summary section
+            document.getElementById("summary-id").textContent = searchId;
+            document.getElementById("summary-count").textContent = data.history.length;
+        } else {
+            tableBody.innerHTML = `<tr><td colspan="4" style="text-align:center;">No records found for ID: ${searchId}</td></tr>`;
+        }
+    } catch (e) {
+        alert("Could not retrieve patient data.");
+    }
+}
 
   resultArea.style.display = "none";
   errorMsg.style.display = "block";
