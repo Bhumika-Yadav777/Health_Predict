@@ -258,14 +258,6 @@ def register():
         print(f"Register error: {e}")
         return jsonify({"error": str(e)}), 500
 
-@app.route('/health', methods=['GET'])
-def health():
-    return jsonify({
-        "status": "ok", 
-        "model_loaded": model is not None,
-        "remedies_loaded": len(disease_remedies) > 0
-    })
-
 if __name__ == '__main__':
     with app.app_context():
         db.create_all()
