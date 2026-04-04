@@ -1,6 +1,118 @@
 const BASE_URL = "http://127.0.0.1:5000";
 let currentLoggedInUser = null;
 
+// --- PREDICTION LOGIC ---
+async function runPrediction() {
+    try {
+        const selectedTags = document.querySelectorAll('.tag.active');
+        const symptoms = Array.from(selectedTags).map(tag => tag.textContent);
+
+        if (symptoms.length === 0) {
+            alert("Please select at least one symptom");
+            return;
+        }
+
+        const savedUser = localStorage.getItem("currentUser") || sessionStorage.getItem("currentUser");
+        let patient_id = savedUser ? JSON.parse(savedUser).email : null;
+
+        // Show loading state on button if you have one
+        const response = await fetch(`${BASE_URL}/predict`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ symptoms, patient_id })
+        });
+
+        const data = await response.json();
+
+        // Update HTML Elements
+        const resultContainer = document.getElementById("prediction-result");
+        if (resultContainer) {
+            resultContainer.style.display = "block";
+            
+            document.getElementById("disease-name").innerHTML = `
+                <h1 class="highlight" style="font-size: 2.5rem; margin-top: 10px;">${data.disease}</h1>
+            `;
+
+            document.getElementById("confidence-level").innerHTML = `
+                <div style="font-size: 2rem; font-weight: 800; color: var(--primary);">${data.confidence}%</div>
+                <div class="confidence-bar">
+                    <div class="confidence-fill" style="width: ${data.confidence}%; background: ${data.confidence > 75 ? '#10b981' : '#f59e0b'}"></div>
+                </div>
+            `;
+
+            document.getElementById("remedies-list").innerHTML = `
+                <ul style="list-style: none; padding: 0;">
+                    ${data.remedies.map(r => `
+                        <li style="background: rgba(67, 97, 238, 0.05); margin-bottom: 10px; padding: 12px; border-radius: 8px; border-left: 4px solid var(--primary);">
+                            <i class="fas fa-check-circle" style="color: var(--primary); margin-right: 10px;"></i>${r}
+                        </li>
+                    `).join('')}
+                </ul>
+            `;
+
+            resultContainer.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        }
+    } catch (error) {
+        console.error("Prediction Error:", error);
+        alert("Make sure the Flask server is running on port 5000");
+    }
+}
+
+// --- PROFILE DASHBOARD LOGIC ---
+async function showProfileView(user) {
+    const content = document.querySelector(".modal-content");
+    if (!content) return;
+
+    const initials = (user.name || user.id).split(" ").map(n => n[0]).join("").toUpperCase().slice(0, 2);
+
+    content.innerHTML = `
+        <span class="close" onclick="closeModal()">&times;</span>
+        <div class="dashboard-split-container" style="display: flex; min-height: 500px;">
+            <div class="profile-sidebar" style="flex: 1; padding: 30px; border-right: 1px solid var(--border); text-align: center;">
+                <div class="profile-avatar-large">${initials}</div>
+                <h2>${user.name || "User"}</h2>
+                <span class="role-badge">${user.role.toUpperCase()}</span>
+                
+                <div class="profile-details" style="margin-top: 30px; text-align: left;">
+                    <div class="detail-item"><label>ID</label><span>${user.id}</span></div>
+                    <div class="detail-item"><label>Email</label><span>${user.email}</span></div>
+                </div>
+                <button onclick="handleLogout()" class="btn-logout"><i class="fas fa-sign-out-alt"></i> Sign Out</button>
+            </div>
+
+            <div class="history-column" style="flex: 1.5; padding: 30px; display: flex; flex-direction: column;">
+                <h3><i class="fas fa-history"></i> Prediction History</h3>
+                <div class="history-scroll-area" style="overflow-y: auto; flex: 1; margin-top: 20px; padding-right: 10px;">
+                    <div id="history-list">Loading...</div>
+                </div>
+            </div>
+        </div>
+    `;
+
+    try {
+        const res = await fetch(`${BASE_URL}/patient/${encodeURIComponent(user.email)}/history`);
+        const data = await res.json();
+        const list = document.getElementById("history-list");
+
+        if (data.history && data.history.length > 0) {
+            list.innerHTML = data.history.map(rec => `
+                <div class="history-card" style="background: var(--glass); border: 1px solid var(--border); padding: 15px; border-radius: 12px; margin-bottom: 15px;">
+                    <div style="display: flex; justify-content: space-between; font-size: 0.8rem; color: var(--primary);">
+                        <span>${rec.date}</span>
+                        <strong>${rec.confidence}% Match</strong>
+                    </div>
+                    <h4 style="margin: 5px 0;">${rec.disease}</h4>
+                    <p style="font-size: 0.8rem; opacity: 0.7;">Symptoms: ${rec.symptoms.join(', ')}</p>
+                </div>
+            `).join('');
+        } else {
+            list.innerHTML = "<p>No history found.</p>";
+        }
+    } catch (e) {
+        document.getElementById("history-list").innerHTML = "Error loading history.";
+    }
+}
+
 // Theme Toggle
 const themeBtn = document.getElementById("theme-toggle");
 if (themeBtn) {
