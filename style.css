@@ -600,7 +600,32 @@ body {
 [data-theme="dark"] .hero p.main {
   color: #ffffff; /* Absolute white for maximum readability */
 }
+/* Ensure active tags are visually distinct */
+.tag.active {
+    background: var(--primary) !important;
+    color: white !important;
+    border-color: var(--primary) !important;
+}
 
+/* Result Card Styling */
+.result-container {
+    margin-top: 30px;
+    padding: 20px;
+    background: var(--glass);
+    border-radius: 15px;
+    border-left: 5px solid var(--primary);
+    animation: fadeIn 0.5s ease;
+}
+
+.result-card h3 {
+    color: var(--primary);
+    margin-bottom: 10px;
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(10px); }
+    to { opacity: 1; transform: translateY(0); }
+}
 /* The Highlight effect fix */
 .highlight {
   background: linear-gradient(90deg, var(--primary), #7209b7);
