@@ -92,14 +92,11 @@ except Exception as e:
 def map_symptom(symptom):
     """Map common symptom names to model symptom names"""
     symptom_lower = symptom.lower().strip()
-    # Check direct mapping
     if symptom_lower in symptom_mapping:
         return symptom_mapping[symptom_lower]
-    # Check if it's already in model features
     symptom_clean = symptom_lower.replace(" ", "_")
     if symptom_clean in features:
         return symptom_clean
-    # Try partial matching
     for key in symptom_mapping:
         if key in symptom_lower or symptom_lower in key:
             return symptom_mapping[key]
@@ -108,25 +105,18 @@ def map_symptom(symptom):
 def calculate_confidence(symptoms, predicted_disease, model_proba=None):
     """Calculate confidence percentage between 70-95%"""
     try:
-        # Base confidence starts at 70%
         confidence = 70.0
-        
-        # Factor 1: Number of symptoms (more symptoms = higher confidence)
-        # Max +10% for 5+ symptoms
         symptom_boost = min(10, (len(symptoms) / 10) * 10)
         confidence += symptom_boost
         
-        # Factor 2: Model probability boost (if available)
         if model_proba is not None and len(model_proba) > 0:
             max_proba = max(model_proba[0]) * 100
             proba_boost = min(10, max_proba / 10)
             confidence += proba_boost
         
-        # Factor 3: Known disease bonus
         if predicted_disease in disease_remedies:
             confidence += 5
         
-        # Ensure confidence stays between 70 and 95
         confidence = min(max(confidence, 70.0), 95.0)
         return round(confidence, 1)
         
@@ -146,7 +136,6 @@ def predict():
         
         print(f"Received symptoms: {user_selections}")
         
-        # Map symptoms to model features
         mapped_symptoms = []
         input_vector = np.zeros(len(features))
         
@@ -156,10 +145,7 @@ def predict():
                 input_vector[features.index(mapped)] = 1
                 mapped_symptoms.append(mapped)
                 print(f"  Mapped: {s} -> {mapped}")
-            else:
-                print(f"  Could not map: {s}")
         
-        # If no symptoms mapped, try direct matching
         if len(mapped_symptoms) == 0:
             for s in user_selections:
                 s_clean = s.lower().strip().replace(" ", "_")
@@ -167,22 +153,18 @@ def predict():
                     input_vector[features.index(s_clean)] = 1
                     mapped_symptoms.append(s_clean)
         
-        # Predict
         prediction = model.predict([input_vector])[0]
         print(f"Prediction: {prediction}")
         
-        # Get probabilities for confidence
         try:
             probabilities = model.predict_proba([input_vector])
             confidence = calculate_confidence(user_selections, prediction, probabilities)
         except:
             confidence = calculate_confidence(user_selections, prediction)
         
-        # Get home remedies
         remedies = disease_remedies.get(prediction, {}).get('remedies', 
             ['Consult a doctor for proper diagnosis', 'Get adequate rest', 'Stay hydrated', 'Monitor symptoms'])
         
-        # Save to database if patient logged in
         saved = False
         if patient_id:
             try:
@@ -240,6 +222,19 @@ def get_patient_history(patient_id):
         })
     
     return jsonify({"history": history})
+
+@app.route('/patient/<patient_id>/info', methods=['GET'])
+def get_patient_info(patient_id):
+    """Get patient info by email"""
+    user = User.query.filter_by(email=patient_id).first()
+    if user:
+        return jsonify({
+            "name": user.name,
+            "email": user.email,
+            "role": user.role,
+            "joined": user.created_at.strftime("%Y-%m-%d") if user.created_at else "N/A"
+        })
+    return jsonify({"error": "Patient not found"}), 404
 
 @app.route('/register', methods=['POST'])
 def register():
