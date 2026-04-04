@@ -1,10 +1,10 @@
-from flask import Flask, request, jsonify, session
+from flask import Flask, request, jsonify
 from flask_sqlalchemy import SQLAlchemy
 from flask_cors import CORS
 import joblib
 import numpy as np
-from datetime import datetime
 import json
+from datetime import datetime
 
 app = Flask(__name__)
 app.config['SECRET_KEY'] = 'your-secret-key-here'
@@ -22,25 +22,34 @@ class User(db.Model):
     role = db.Column(db.String(20), default='patient')
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
 
-# Prediction Model - stores results for patients
+# Prediction Model
 class Prediction(db.Model):
     id = db.Column(db.Integer, primary_key=True)
-    patient_id = db.Column(db.String(50), nullable=False)  # P101 format
-    symptoms = db.Column(db.Text, nullable=False)  # JSON array of symptoms
+    patient_id = db.Column(db.String(50), nullable=False)
+    symptoms = db.Column(db.Text, nullable=False)
     predicted_disease = db.Column(db.String(200), nullable=False)
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
 
 # Load Model and symptom names
-model = joblib.load('model.pkl')
-features = joblib.load('symptoms_features.pkl')
+try:
+    model = joblib.load('model.pkl')
+    features = joblib.load('symptoms_features.pkl')
+    print(f"Model loaded successfully! Features: {len(features)}")
+except Exception as e:
+    print(f"Error loading model: {e}")
+    model = None
+    features = []
 
 # SINGLE predict endpoint
 @app.route('/predict', methods=['POST'])
 def predict():
+    if model is None:
+        return jsonify({"error": "Model not loaded properly"}), 500
+    
     try:
         data = request.json
         user_selections = data.get('symptoms', [])
-        patient_id = data.get('patient_id', None)  # Get patient ID if logged in
+        patient_id = data.get('patient_id', None)
         
         # Preprocessing: Create the 1/0 array
         input_vector = np.zeros(len(features))
@@ -53,10 +62,9 @@ def predict():
         prediction = model.predict([input_vector])[0]
         
         # SAVE TO DATABASE if patient is logged in
+        saved = False
         if patient_id:
-            # Check if user exists
-            user = User.query.filter_by(email=patient_id).first()
-            if user or patient_id.startswith('P'):
+            try:
                 new_prediction = Prediction(
                     patient_id=patient_id,
                     symptoms=json.dumps(user_selections),
@@ -64,12 +72,15 @@ def predict():
                 )
                 db.session.add(new_prediction)
                 db.session.commit()
+                saved = True
                 print(f"Saved prediction for {patient_id}: {prediction}")
+            except Exception as e:
+                print(f"Error saving to database: {e}")
         
         return jsonify({
             "disease": prediction,
-            "saved": bool(patient_id),
-            "message": "Prediction completed" + (" and saved!" if patient_id else "")
+            "saved": saved,
+            "message": "Prediction completed" + (" and saved!" if saved else "")
         })
         
     except Exception as e:
@@ -118,10 +129,14 @@ def get_patient_history(patient_id):
     
     history = []
     for pred in predictions:
+        try:
+            symptoms_list = json.loads(pred.symptoms)
+        except:
+            symptoms_list = []
         history.append({
             "id": pred.id,
             "date": pred.created_at.strftime("%Y-%m-%d %H:%M"),
-            "symptoms": json.loads(pred.symptoms),
+            "symptoms": symptoms_list,
             "disease": pred.predicted_disease
         })
     
@@ -134,10 +149,14 @@ def get_all_predictions():
     
     results = []
     for pred in predictions:
+        try:
+            symptoms_list = json.loads(pred.symptoms)
+        except:
+            symptoms_list = []
         results.append({
             "patient_id": pred.patient_id,
             "date": pred.created_at.strftime("%Y-%m-%d %H:%M"),
-            "symptoms": json.loads(pred.symptoms),
+            "symptoms": symptoms_list,
             "disease": pred.predicted_disease
         })
     
@@ -146,4 +165,6 @@ def get_all_predictions():
 if __name__ == '__main__':
     with app.app_context():
         db.create_all()
+        print("Database created successfully!")
+    print("Starting Flask server on http://127.0.0.1:5000")
     app.run(debug=True, port=5000)
