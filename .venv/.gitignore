@@ -1,0 +1,40 @@
+# 🔹 Python cache
+__pycache__/
+*.pyc
+*.pyo
+
+# 🔹 Virtual environment
+venv/
+.venv/
+env/
+
+# 🔹 Database files
+*.db
+*.sqlite3
+
+# 🔹 ML model files (very important)
+*.pkl
+*.joblib
+
+# 🔹 Environment variables (secrets)
+.env
+
+# 🔹 OS files
+.DS_Store
+Thumbs.db
+
+# 🔹 VS Code settings (optional)
+.vscode/
+
+# 🔹 Git temporary files
+.git-rebase/
+.git/rebase-merge/
+
+# 🔹 Backend runtime folders
+backend/instance/
+
+# 🔹 Logs
+*.log
+
+# 🔹 Node (if you add later)
+node_modules/
