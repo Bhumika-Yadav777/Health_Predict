@@ -6,7 +6,7 @@
 // ── IMPORTANT: Change this to your deployed Flask API URL ─────────────
 // While testing locally: "http://127.0.0.1:5000"
 // After deploying Flask to Render/Railway/etc: "https://your-api.onrender.com"
-const BASE_URL = "https://health-predict-api.onrender.com";
+const BASE_URL = "http://127.0.0.1:5000";
 // ---------------------------------------------------------------------
 
 let currentLoggedInUser = null;
