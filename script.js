@@ -1,7 +1,17 @@
-const BASE_URL = "http://127.0.0.1:5000";
+// =====================================================================
+// HealthPredict — script.js  (fixed version — no Firebase)
+// Uses localStorage for auth + Flask backend for predictions/history
+// =====================================================================
+
+// ── IMPORTANT: Change this to your deployed Flask API URL ─────────────
+// While testing locally: "http://127.0.0.1:5000"
+// After deploying Flask to Render/Railway/etc: "https://your-api.onrender.com"
+const BASE_URL = "https://health-predict-api.onrender.com";
+// ---------------------------------------------------------------------
+
 let currentLoggedInUser = null;
 
-// Theme Toggle
+// ── Theme ─────────────────────────────────────────────────────────────
 const themeBtn = document.getElementById("theme-toggle");
 if (themeBtn) {
   themeBtn.addEventListener("click", () => {
@@ -16,10 +26,9 @@ if (themeBtn) {
   });
 }
 
-// Symptom Tag Selection
+// ── Symptom Tags ──────────────────────────────────────────────────────
 function attachTagListeners() {
-  const tags = document.querySelectorAll(".tag");
-  tags.forEach((tag) => {
+  document.querySelectorAll(".tag").forEach((tag) => {
     tag.removeEventListener("click", tagClickHandler);
     tag.addEventListener("click", tagClickHandler);
   });
@@ -30,7 +39,7 @@ function tagClickHandler(e) {
   this.classList.toggle("active");
 }
 
-// Modal Controls
+// ── Modal ─────────────────────────────────────────────────────────────
 function openModal() {
   const modal = document.getElementById("login-modal");
   if (!modal) return;
@@ -55,67 +64,57 @@ window.onclick = function (event) {
   if (event.target === modal) closeModal();
 };
 
-// Auth Form
+// ── Auth Form ─────────────────────────────────────────────────────────
 function showAuthForm(mode) {
   const isLogin = mode === "login";
   const content = document.querySelector(".modal-content");
   if (!content) return;
 
   content.innerHTML = `
-        <span class="close" onclick="closeModal()">&times;</span>
-        <div class="auth-tabs">
-            <button class="tab-btn ${isLogin ? "active" : ""}" onclick="showAuthForm('login')">Sign In</button>
-            <button class="tab-btn ${!isLogin ? "active" : ""}" onclick="showAuthForm('register')">Register</button>
+    <span class="close" onclick="closeModal()">&times;</span>
+    <div class="auth-tabs">
+      <button class="tab-btn ${isLogin ? "active" : ""}" onclick="showAuthForm('login')">Sign In</button>
+      <button class="tab-btn ${!isLogin ? "active" : ""}" onclick="showAuthForm('register')">Register</button>
+    </div>
+    <form id="auth-form" onsubmit="handleAuthSubmit(event, '${mode}')">
+      <h2 style="margin-bottom:15px;color:var(--text);">${isLogin ? "Welcome Back" : "Create Account"}</h2>
+      ${!isLogin ? '<input type="text" id="reg-name" placeholder="Full Name" required class="auth-input">' : ""}
+      <div class="role-selection">
+        <label style="color:var(--text);">I am a:</label>
+        <div class="radio-group">
+          <input type="radio" name="role" value="patient" id="role-p" checked>
+          <label for="role-p">Patient</label>
+          <input type="radio" name="role" value="doctor" id="role-d">
+          <label for="role-d">Doctor</label>
         </div>
-        <form id="auth-form" onsubmit="handleAuthSubmit(event, '${mode}')">
-            <h2 style="margin-bottom:15px; color:var(--text);">${isLogin ? "Welcome Back" : "Create Account"}</h2>
-            ${!isLogin ? '<input type="text" id="reg-name" placeholder="Full Name" required class="auth-input">' : ""}
-            <div class="role-selection">
-                <label style="color:var(--text);">I am a:</label>
-                <div class="radio-group">
-                    <input type="radio" name="role" value="patient" id="role-p" checked>
-                    <label for="role-p">Patient</label>
-                    <input type="radio" name="role" value="doctor" id="role-d">
-                    <label for="role-d">Doctor</label>
-                </div>
-            </div>
-            <input type="text" id="user-id" placeholder="ID (e.g. P101 or D202)" required class="auth-input">
-            <input type="email" id="user-email" placeholder="Email Address" required class="auth-input">
-            <input type="password" id="user-pass" placeholder="Password" required class="auth-input">
-            ${!isLogin ? '<input type="password" id="user-pass2" placeholder="Confirm Password" required class="auth-input">' : ""}
-            ${
-              isLogin
-                ? `
-            <div class="remember-group">
-                <input type="checkbox" id="remember-me">
-                <label for="remember-me" style="color:var(--text);">Keep me logged in</label>
-            </div>`
-                : ""
-            }
-            <p id="auth-error" style="color:#ef4444; font-size:0.8rem; min-height:20px; margin:10px 0;"></p>
-            <button type="submit" class="btn-primary" style="width:100%">${isLogin ? "Login" : "Register"}</button>
-        </form>
-    `;
+      </div>
+      <input type="text" id="user-id" placeholder="ID (e.g. P101 or D202)" required class="auth-input">
+      <input type="email" id="user-email" placeholder="Email Address" required class="auth-input">
+      <input type="password" id="user-pass" placeholder="Password" required class="auth-input">
+      ${!isLogin ? '<input type="password" id="user-pass2" placeholder="Confirm Password" required class="auth-input">' : ""}
+      ${isLogin ? `
+      <div class="remember-group">
+        <input type="checkbox" id="remember-me">
+        <label for="remember-me" style="color:var(--text);">Keep me logged in</label>
+      </div>` : ""}
+      <p id="auth-error" style="color:#ef4444;font-size:0.8rem;min-height:20px;margin:10px 0;"></p>
+      <button type="submit" class="btn-primary" style="width:100%">${isLogin ? "Login" : "Register"}</button>
+    </form>`;
 }
 
 function handleAuthSubmit(e, mode) {
   e.preventDefault();
   const role = document.querySelector('input[name="role"]:checked').value;
   const id = document.getElementById("user-id").value.trim().toUpperCase();
-  const email = document
-    .getElementById("user-email")
-    .value.trim()
-    .toLowerCase();
+  const email = document.getElementById("user-email").value.trim().toLowerCase();
   const pass = document.getElementById("user-pass").value;
   const errorEl = document.getElementById("auth-error");
 
   if (role === "doctor" && !id.startsWith("D")) {
-    errorEl.textContent = "Doctor IDs must start with 'D'";
-    return;
+    errorEl.textContent = "Doctor IDs must start with 'D'"; return;
   }
   if (role === "patient" && !id.startsWith("P")) {
-    errorEl.textContent = "Patient IDs must start with 'P'";
-    return;
+    errorEl.textContent = "Patient IDs must start with 'P'"; return;
   }
 
   let users = JSON.parse(localStorage.getItem("hp_users") || "[]");
@@ -123,186 +122,141 @@ function handleAuthSubmit(e, mode) {
   if (mode === "register") {
     const name = document.getElementById("reg-name").value.trim();
     const pass2 = document.getElementById("user-pass2").value;
-    if (pass !== pass2) {
-      errorEl.textContent = "Passwords do not match.";
-      return;
-    }
-    if (users.find((u) => u.id === id)) {
-      errorEl.textContent = "ID already registered.";
-      return;
-    }
+    if (pass !== pass2) { errorEl.textContent = "Passwords do not match."; return; }
+    if (users.find((u) => u.id === id)) { errorEl.textContent = "ID already registered."; return; }
 
-    const newUser = {
-      id,
-      email,
-      pass,
-      role,
-      name,
-      joined: new Date().toLocaleDateString(),
-    };
+    const newUser = { id, email, pass, role, name, joined: new Date().toLocaleDateString() };
     users.push(newUser);
     localStorage.setItem("hp_users", JSON.stringify(users));
     localStorage.setItem("currentUser", JSON.stringify(newUser));
     currentLoggedInUser = newUser;
     updateNavAfterLogin(newUser);
     showProfileView(newUser);
-    closeModal();
 
+    // Sync to backend (non-blocking)
     fetch(`${BASE_URL}/register`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ email, password: pass, name, role }),
+      body: JSON.stringify({ email, password: pass, name, role, patient_id: id }),
     }).catch((e) => console.log("Backend sync:", e));
+
   } else {
-    const user = users.find(
-      (u) => u.id === id && u.email === email && u.pass === pass,
-    );
-    if (!user) {
-      errorEl.textContent = "Invalid Credentials.";
-      return;
-    }
+    const user = users.find((u) => u.id === id && u.email === email && u.pass === pass);
+    if (!user) { errorEl.textContent = "Invalid Credentials."; return; }
     const remember = document.getElementById("remember-me")?.checked;
     if (remember) localStorage.setItem("currentUser", JSON.stringify(user));
     else sessionStorage.setItem("currentUser", JSON.stringify(user));
     currentLoggedInUser = user;
     updateNavAfterLogin(user);
     showProfileView(user);
-    closeModal();
   }
 }
 
+// ── Profile View ──────────────────────────────────────────────────────
 async function showProfileView(user) {
   const content = document.querySelector(".modal-content");
   if (!content) return;
 
   const initials = (user.name || user.id)
-    .split(" ")
-    .map((w) => w[0])
-    .join("")
-    .toUpperCase()
-    .slice(0, 2);
-
-  let patientInfo = { name: user.name || "User", joined: user.joined || "April 2026" };
-  try {
-    const infoRes = await fetch(`${BASE_URL}/patient/${encodeURIComponent(user.email)}/info`);
-    if (infoRes.ok) {
-      const infoData = await infoRes.json();
-      patientInfo = infoData;
-    }
-  } catch (e) {
-    console.log("Using local user info");
-  }
+    .split(" ").map((w) => w[0]).join("").toUpperCase().slice(0, 2);
 
   content.innerHTML = `
-        <span class="close" onclick="closeModal()">&times;</span>
-        <div class="profile-card">
-            <div class="profile-header">
-                <div class="profile-avatar-large">${initials}</div>
-                <h2 class="profile-name">${patientInfo.name || user.name}</h2>
-                <span class="role-badge">${user.role.toUpperCase()}</span>
-            </div>
-            <div class="profile-details">
-                <div class="detail-item">
-                    <label><i class="fas fa-id-badge"></i> ID</label>
-                    <span>${user.id}</span>
-                </div>
-                <div class="detail-item">
-                    <label><i class="fas fa-envelope"></i> Email</label>
-                    <span>${user.email}</span>
-                </div>
-                <div class="detail-item">
-                    <label><i class="fas fa-calendar-alt"></i> Member Since</label>
-                    <span>${patientInfo.joined || user.joined}</span>
-                </div>
-                <div class="detail-item">
-                    <label><i class="fas fa-chart-line"></i> Total Predictions</label>
-                    <span id="total-predictions-count">--</span>
-                </div>
-            </div>
-            <div class="history-section">
-                <h4><i class="fas fa-history"></i> Prediction History</h4>
-                <div id="history-list-container" class="history-list-container">
-                    <div class="loading-spinner"><i class="fas fa-spinner fa-spin"></i> Loading...</div>
-                </div>
-            </div>
-            <div class="profile-actions">
-                <button class="btn-primary" onclick="closeModal()">Close</button>
-                <button onclick="handleLogout()" class="btn-logout"><i class="fas fa-sign-out-alt"></i> Sign Out</button>
-            </div>
+    <span class="close" onclick="closeModal()">&times;</span>
+    <div class="profile-card">
+      <div class="profile-header">
+        <div class="profile-avatar-large">${initials}</div>
+        <h2 class="profile-name">${user.name || user.id}</h2>
+        <span class="role-badge">${user.role.toUpperCase()}</span>
+      </div>
+      <div class="profile-details">
+        <div class="detail-item">
+          <label><i class="fas fa-id-badge"></i> ID</label>
+          <span>${user.id}</span>
         </div>
-    `;
+        <div class="detail-item">
+          <label><i class="fas fa-envelope"></i> Email</label>
+          <span>${user.email}</span>
+        </div>
+        <div class="detail-item">
+          <label><i class="fas fa-calendar-alt"></i> Member Since</label>
+          <span>${user.joined || "—"}</span>
+        </div>
+        <div class="detail-item">
+          <label><i class="fas fa-chart-line"></i> Total Predictions</label>
+          <span id="total-predictions-count">—</span>
+        </div>
+      </div>
+
+      <div class="history-section">
+        <h4><i class="fas fa-history"></i> Prediction History</h4>
+        <div id="history-list-container" class="history-list-container">
+          <div class="loading-spinner"><i class="fas fa-spinner fa-spin"></i> Loading...</div>
+        </div>
+      </div>
+
+      <div class="profile-actions">
+        <button class="btn-primary" onclick="closeModal()">Close</button>
+        <button onclick="handleLogout()" class="btn-logout">
+          <i class="fas fa-sign-out-alt"></i> Sign Out
+        </button>
+      </div>
+    </div>`;
 
   await loadPatientHistory(user.email);
 }
 
+// ── Load Patient History ──────────────────────────────────────────────
 async function loadPatientHistory(email) {
-  const historyContainer = document.getElementById("history-list-container");
-  if (!historyContainer) return;
+  const container = document.getElementById("history-list-container");
+  if (!container) return;
 
   try {
-    const response = await fetch(`${BASE_URL}/patient/${encodeURIComponent(email)}/history`);
-    const data = await response.json();
-    const totalCountSpan = document.getElementById("total-predictions-count");
-    
-    if (data.history && data.history.length > 0) {
-      if (totalCountSpan) totalCountSpan.innerText = data.history.length;
-      
-      let historyHtml = '';
-      data.history.forEach((record) => {
-        let confidenceColor = "#10b981";
-        let confidenceText = "High";
-        if (record.confidence >= 80) {
-          confidenceColor = "#10b981";
-          confidenceText = "High";
-        } else if (record.confidence >= 60) {
-          confidenceColor = "#f59e0b";
-          confidenceText = "Medium";
-        } else {
-          confidenceColor = "#ef4444";
-          confidenceText = "Low";
-        }
+    const res = await fetch(`${BASE_URL}/patient/${encodeURIComponent(email)}/history`);
+    const data = await res.json();
+    const countEl = document.getElementById("total-predictions-count");
 
-        historyHtml += `
+    if (data.history && data.history.length > 0) {
+      if (countEl) countEl.textContent = data.history.length;
+
+      container.innerHTML = data.history.map((rec) => {
+        const conf = parseFloat(rec.confidence) || 0;
+        const badgeCls = conf >= 80 ? "conf-high" : conf >= 60 ? "conf-medium" : "conf-low";
+        const badgeLabel = conf >= 80 ? "High" : conf >= 60 ? "Medium" : "Low";
+        return `
           <div class="history-record">
             <div class="record-header">
-              <span class="record-date"><i class="far fa-calendar-alt"></i> ${record.date}</span>
-              <span class="record-confidence" style="background: ${confidenceColor};">${record.confidence}% ${confidenceText}</span>
+              <span class="record-date"><i class="far fa-calendar-alt"></i> ${rec.date}</span>
+              <span class="record-confidence ${badgeCls}">${conf.toFixed(1)}% ${badgeLabel}</span>
             </div>
             <div class="record-disease">
-              <strong>Predicted Disease:</strong> ${record.disease}
+              <strong>Predicted Disease:</strong> ${rec.disease}
             </div>
             <div class="record-symptoms">
-              <strong>Symptoms:</strong> ${record.symptoms.join(", ")}
+              <strong>Symptoms:</strong> ${(rec.symptoms || []).join(", ")}
             </div>
             <div class="record-remedies">
               <strong><i class="fas fa-leaf"></i> Remedies:</strong>
-              <ul>
-                ${record.remedies.slice(0, 3).map(r => `<li>${r}</li>`).join("")}
-              </ul>
+              <ul>${(rec.remedies || []).slice(0, 3).map((r) => `<li>${r}</li>`).join("")}</ul>
             </div>
-          </div>
-        `;
-      });
-      historyContainer.innerHTML = historyHtml;
+          </div>`;
+      }).join("");
     } else {
-      if (totalCountSpan) totalCountSpan.innerText = "0";
-      historyContainer.innerHTML = `
+      if (countEl) countEl.textContent = "0";
+      container.innerHTML = `
         <div class="empty-history">
           <i class="fas fa-clinic-medical"></i>
           <p>No predictions yet</p>
           <small>Try analyzing symptoms to see your history here!</small>
-        </div>
-      `;
+        </div>`;
     }
-  } catch (error) {
-    console.error("History error:", error);
-    historyContainer.innerHTML = `
+  } catch (err) {
+    console.error("History error:", err);
+    container.innerHTML = `
       <div class="empty-history error">
         <i class="fas fa-exclamation-triangle"></i>
         <p>Unable to load history</p>
-        <small>Make sure the backend server is running.</small>
-      </div>
-    `;
+        <small>Backend server may be offline.</small>
+      </div>`;
   }
 }
 
@@ -316,123 +270,222 @@ function updateNavAfterLogin(user) {
   const container = document.getElementById("main-signin-btn");
   if (!container) return;
   const initials = (user.name || user.id)
-    .split(" ")
-    .map((w) => w[0])
-    .join("")
-    .toUpperCase()
-    .slice(0, 2);
+    .split(" ").map((w) => w[0]).join("").toUpperCase().slice(0, 2);
   const iconCircle = container.querySelector(".profile-icon-circle");
   iconCircle.innerHTML = `<span class="nav-initials">${initials}</span>`;
   iconCircle.style.background = "linear-gradient(135deg, #4361ee, #7209b7)";
-  const label = container.querySelector(".nav-label");
-  label.textContent = user.id;
+  container.querySelector(".nav-label").textContent = user.id;
   container.classList.add("logged-in");
 }
 
+// ── Prediction — result shown INLINE below the form ───────────────────
+async function runPrediction() {
+  const selectedTags = document.querySelectorAll(".tag.active");
+  const symptoms = Array.from(selectedTags).map((t) => t.textContent.trim());
+
+  if (symptoms.length === 0) {
+    alert("Please select at least one symptom.");
+    return;
+  }
+
+  const btn = document.querySelector(".btn-prediction");
+  btn.disabled = true;
+  btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Analyzing...';
+
+  // Show inline loader immediately
+  const resultDiv = document.getElementById("prediction-result");
+  resultDiv.style.display = "block";
+  resultDiv.innerHTML = `
+    <div class="pred-loading">
+      <i class="fas fa-spinner fa-spin" style="font-size:2rem;color:#1D9E75;"></i>
+      <p style="margin-top:12px;color:var(--text-muted,#666);">Analyzing your symptoms...</p>
+    </div>`;
+  resultDiv.scrollIntoView({ behavior: "smooth", block: "start" });
+
+  const saved = localStorage.getItem("currentUser") || sessionStorage.getItem("currentUser");
+  let patient_id = null;
+  if (saved) {
+    const user = JSON.parse(saved);
+    if (user.role === "patient") patient_id = user.email;
+  }
+
+  try {
+    const res = await fetch(`${BASE_URL}/predict`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ symptoms, patient_id }),
+    });
+    if (!res.ok) throw new Error(`Server responded with status ${res.status}`);
+    const data = await res.json();
+    renderInlinePrediction(data);
+
+    // Refresh profile history if the profile modal is open
+    if (saved && document.getElementById("login-modal")?.style.display === "flex") {
+      await loadPatientHistory(JSON.parse(saved).email);
+    }
+  } catch (err) {
+    console.error(err);
+    resultDiv.innerHTML = `
+      <div class="pred-error">
+        <i class="fas fa-exclamation-triangle" style="font-size:2rem;color:#ef4444;"></i>
+        <p style="margin-top:10px;font-weight:600;">Prediction failed</p>
+        <small style="color:#888;">${err.message}</small>
+        <p style="margin-top:8px;font-size:13px;">Make sure the backend server is running.</p>
+      </div>`;
+  } finally {
+    btn.disabled = false;
+    btn.innerHTML = 'Get Prediction <i class="fas fa-arrow-right"></i>';
+  }
+}
+
+function renderInlinePrediction(data) {
+  const conf = parseFloat(data.confidence) || 0;
+  const badgeCls = conf >= 80 ? "conf-high" : conf >= 60 ? "conf-medium" : "conf-low";
+  const badgeLabel = conf >= 80 ? "High" : conf >= 60 ? "Medium" : "Low";
+  const barColor = conf >= 80 ? "#1D9E75" : conf >= 60 ? "#f59e0b" : "#ef4444";
+
+  const remediesHtml = (data.remedies || []).length > 0
+    ? `<ul>${data.remedies.map((r) => `<li>${r}</li>`).join("")}</ul>`
+    : `<p style="color:#888;">Consult a doctor for personalised advice.</p>`;
+
+  const resultDiv = document.getElementById("prediction-result");
+  resultDiv.style.display = "block";
+  resultDiv.innerHTML = `
+    <div class="pred-result-header">
+      <span class="pred-badge-ai"><i class="fas fa-robot"></i> AI ANALYSIS COMPLETE</span>
+    </div>
+    <div class="pred-disease-row">
+      <div class="pred-label">Predicted Condition</div>
+      <div class="pred-disease-name">${data.disease || "Unknown"}</div>
+    </div>
+    <div class="pred-confidence-row">
+      <div class="pred-conf-meta">
+        <span class="pred-label">Match Confidence</span>
+        <span class="pred-conf-value">
+          ${conf.toFixed(1)}%
+          <span class="record-confidence ${badgeCls}" style="font-size:12px;margin-left:8px;">${badgeLabel}</span>
+        </span>
+      </div>
+      <div class="pred-conf-bar-wrap">
+        <div class="pred-conf-bar-fill" style="width:0%;background:${barColor};transition:width 1s ease;"></div>
+      </div>
+      <p class="pred-conf-note">Our Random Forest model calculated this probability based on your reported symptoms.</p>
+    </div>
+    <div class="pred-remedies-row">
+      <div class="pred-label"><i class="fas fa-leaf"></i> Recommended Actions</div>
+      <div class="pred-remedies-list">${remediesHtml}</div>
+    </div>
+    <div class="pred-disclaimer">
+      <i class="fas fa-exclamation-triangle"></i>
+      <span><strong>Disclaimer:</strong> This is an automated preliminary assessment. It is not a substitute for professional medical diagnosis. Please consult a healthcare provider.</span>
+    </div>`;
+
+  // Trigger bar animation after paint
+  setTimeout(() => {
+    const fill = resultDiv.querySelector(".pred-conf-bar-fill");
+    if (fill) fill.style.width = conf + "%";
+  }, 60);
+
+  resultDiv.scrollIntoView({ behavior: "smooth", block: "start" });
+}
+
+// ── Doctor Dashboard ──────────────────────────────────────────────────
 async function searchPatient() {
   const id = document.getElementById("patient-search-input").value.trim().toUpperCase();
   const resultArea = document.getElementById("patient-result-area");
   const errorMsg = document.getElementById("no-result-msg");
   const tableBody = document.getElementById("patient-record-body");
 
-  if (!id) {
-    alert("Please enter a Patient ID (e.g., P101)");
-    return;
-  }
+  if (!id) { alert("Please enter a Patient ID (e.g., P101)"); return; }
 
   resultArea.style.display = "none";
   errorMsg.style.display = "block";
   errorMsg.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Loading patient records...';
+  tableBody.innerHTML = "";
 
   try {
-    const historyResponse = await fetch(`${BASE_URL}/patient/${encodeURIComponent(id)}/history`);
-    const historyData = await historyResponse.json();
+    // Look up email from localStorage (patients register with P-ID + email)
+    const allUsers = JSON.parse(localStorage.getItem("hp_users") || "[]");
+    const matchedUser = allUsers.find((u) => u.id === id && u.role === "patient");
+    const lookupKey = matchedUser ? matchedUser.email : id;
 
-    let patientName = id;
+    const histRes = await fetch(`${BASE_URL}/patient/${encodeURIComponent(lookupKey)}/history`);
+    const histData = await histRes.json();
+
+    // Try to get patient name from backend
+    let patientName = matchedUser?.name || id;
     try {
-      const infoResponse = await fetch(`${BASE_URL}/patient/${encodeURIComponent(id)}/info`);
-      if (infoResponse.ok) {
-        const infoData = await infoResponse.json();
-        patientName = infoData.name || id;
+      const infoRes = await fetch(`${BASE_URL}/patient/${encodeURIComponent(lookupKey)}/info`);
+      if (infoRes.ok) {
+        const info = await infoRes.json();
+        patientName = info.name || patientName;
       }
-    } catch (e) {}
+    } catch (_) {}
 
-    if (historyData.history && historyData.history.length > 0) {
+    if (histData.history && histData.history.length > 0) {
       errorMsg.style.display = "none";
-      tableBody.innerHTML = "";
+      document.getElementById("res-name").textContent = patientName;
+      document.getElementById("res-date").textContent = histData.history[0]?.date || "—";
+      document.getElementById("total-records").textContent = histData.history.length;
 
-      document.getElementById("res-name").innerText = patientName;
-      document.getElementById("res-date").innerText = historyData.history[0]?.date || "N/A";
-      document.getElementById("total-records").innerText = historyData.history.length;
+      const avg = histData.history.reduce((s, r) => s + (parseFloat(r.confidence) || 0), 0)
+                  / histData.history.length;
+      document.getElementById("avg-confidence").innerHTML =
+        `<span style="color:#1D9E75;font-weight:700;">${avg.toFixed(1)}%</span>`;
 
-      let avgConfidence = historyData.history.reduce((sum, rec) => sum + rec.confidence, 0) / historyData.history.length;
-      document.getElementById("avg-confidence").innerHTML = `<span style="color: #10b981;">${avgConfidence.toFixed(1)}%</span>`;
+      tableBody.innerHTML = histData.history.map((rec) => {
+        const conf = parseFloat(rec.confidence) || 0;
+        const barColor = conf >= 80 ? "#1D9E75" : conf >= 60 ? "#f59e0b" : "#ef4444";
+        const badgeCls = conf >= 80 ? "conf-high" : conf >= 60 ? "conf-medium" : "conf-low";
+        const badgeLabel = conf >= 80 ? "High" : conf >= 60 ? "Medium" : "Low";
+        const remediesList = (rec.remedies || []).map((r) => `• ${r}`).join("\n");
 
-      historyData.history.forEach((rec) => {
-        let confidenceColor = "#10b981";
-        let confidenceText = "High";
-        if (rec.confidence >= 80) {
-          confidenceColor = "#10b981";
-          confidenceText = "High";
-        } else if (rec.confidence >= 60) {
-          confidenceColor = "#f59e0b";
-          confidenceText = "Medium";
-        } else {
-          confidenceColor = "#ef4444";
-          confidenceText = "Low";
-        }
-
-        const remediesList = rec.remedies.map((r) => `• ${r}`).join("\n");
-
-        tableBody.innerHTML += `
+        return `
           <tr>
-            <td>${rec.date}</td>
-            <td style="max-width: 200px;">${rec.symptoms.join(", ")}</td>
-            <td><strong>${rec.disease}</strong></td>
+            <td>${rec.date || "—"}</td>
+            <td style="max-width:200px;">${(rec.symptoms || []).join(", ")}</td>
+            <td><strong>${rec.disease || "—"}</strong></td>
             <td>
-              <span class="confidence-badge" style="background: ${confidenceColor};">${rec.confidence}% (${confidenceText})</span>
-              <div class="confidence-bar-small">
-                <div class="confidence-fill-small" style="width: ${rec.confidence}%; background: ${confidenceColor};"></div>
+              <span class="record-confidence ${badgeCls}">${conf.toFixed(1)}% (${badgeLabel})</span>
+              <div class="confidence-bar-small" style="margin-top:5px;">
+                <div class="confidence-fill-small" style="width:${conf}%;background:${barColor};"></div>
               </div>
-             </td>
+            </td>
             <td><span class="status-badge status-reviewed">Completed</span></td>
             <td>
-              <button class="btn-view-remedies" onclick="showDetailedRemedies('${rec.disease.replace(/'/g, "\\'")}', \`${remediesList.replace(/`/g, "\\`")}\`)">
+              <button class="btn-view-remedies"
+                onclick="showDetailedRemedies('${rec.disease.replace(/'/g, "\\'")}',
+                \`${remediesList.replace(/`/g, "\\`")}\`)">
                 <i class="fas fa-leaf"></i> View
               </button>
-             </td>
-          </tr>
-        `;
-      });
+            </td>
+          </tr>`;
+      }).join("");
+
       resultArea.style.display = "block";
     } else {
       errorMsg.innerHTML = `
-        <i class="fas fa-exclamation-circle"></i> No records found for patient ID: ${id}<br>
-        <small>Make sure the patient has made predictions after logging in.</small>
-      `;
+        <i class="fas fa-exclamation-circle"></i>
+        No records found for patient ID: <strong>${id}</strong><br>
+        <small>Make sure the patient has made predictions after logging in.</small>`;
     }
-  } catch (error) {
-    console.error("Search error:", error);
-    errorMsg.innerHTML = `<i class="fas fa-exclamation-circle"></i> Backend error. Make sure server is running on port 5000.`;
+  } catch (err) {
+    console.error("Search error:", err);
+    errorMsg.innerHTML = `
+      <i class="fas fa-exclamation-circle"></i>
+      Backend error — make sure the server is running.<br>
+      <small>${err.message}</small>`;
   }
 }
 
+// ── Remedies popup ────────────────────────────────────────────────────
 function showDetailedRemedies(disease, remediesText) {
   const modal = document.createElement("div");
   modal.className = "remedies-modal-overlay";
   modal.style.cssText = `
-    position: fixed;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    background: rgba(0,0,0,0.5);
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    z-index: 10000;
-  `;
-
+    position:fixed;top:0;left:0;width:100%;height:100%;
+    background:rgba(0,0,0,0.5);display:flex;
+    justify-content:center;align-items:center;z-index:10000;`;
   modal.innerHTML = `
     <div class="remedies-modal-content">
       <div class="remedies-modal-header">
@@ -440,25 +493,32 @@ function showDetailedRemedies(disease, remediesText) {
         <button class="remedies-modal-close" onclick="this.closest('.remedies-modal-overlay').remove()">&times;</button>
       </div>
       <div class="remedies-modal-body">
-        ${remediesText.split("\n").map(r => `<p><i class="fas fa-check-circle"></i> ${r}</p>`).join("")}
+        ${remediesText.split("\n").filter(r => r.trim()).map((r) => `<p><i class="fas fa-check-circle"></i> ${r}</p>`).join("")}
       </div>
       <div class="remedies-modal-footer">
-        <small><i class="fas fa-exclamation-triangle"></i> Note: These are home remedies. Please consult a doctor for proper medical advice.</small>
+        <small><i class="fas fa-exclamation-triangle"></i> These are home remedies. Please consult a doctor.</small>
         <button onclick="this.closest('.remedies-modal-overlay').remove()" class="btn-close-remedies">Close</button>
       </div>
-    </div>
-  `;
-
+    </div>`;
   document.body.appendChild(modal);
 }
 
-// Contact Form
+// ── FAQ ───────────────────────────────────────────────────────────────
+function toggleFAQ(element) {
+  const item = element.parentElement;
+  document.querySelectorAll(".faq-item").forEach((other) => {
+    if (other !== item) other.classList.remove("active");
+  });
+  item.classList.toggle("active");
+}
+
+// ── Contact Form ──────────────────────────────────────────────────────
 const contactForm = document.querySelector(".contact-form");
 if (contactForm) {
   contactForm.addEventListener("submit", function (e) {
     e.preventDefault();
     const btn = this.querySelector("button");
-    const originalText = btn.innerText;
+    const orig = btn.innerText;
     btn.innerText = "Sending...";
     btn.disabled = true;
     emailjs.sendForm("service_xtddcju", "template_zrywow4", this).then(
@@ -466,132 +526,31 @@ if (contactForm) {
         btn.innerText = "Message Sent!";
         alert("Message sent successfully!");
         contactForm.reset();
-        setTimeout(() => {
-          btn.innerText = originalText;
-          btn.disabled = false;
-        }, 3000);
+        setTimeout(() => { btn.innerText = orig; btn.disabled = false; }, 3000);
       },
-      (err) => {
+      () => {
         btn.innerText = "Error";
         btn.disabled = false;
         alert("Failed to send.");
-        setTimeout(() => {
-          btn.innerText = originalText;
-        }, 3000);
-      },
+        setTimeout(() => { btn.innerText = orig; }, 3000);
+      }
     );
   });
 }
 
-// MAIN PREDICTION FUNCTION (Single version)
-async function runPrediction() {
-  try {
-    const selectedTags = document.querySelectorAll('.tag.active');
-    const symptoms = Array.from(selectedTags).map(tag => tag.textContent);
-
-    if (symptoms.length === 0) {
-      alert("Please select at least one symptom");
-      return;
-    }
-
-    const savedUser = localStorage.getItem("currentUser") || sessionStorage.getItem("currentUser");
-    let patient_id = null;
-    if (savedUser) {
-      const user = JSON.parse(savedUser);
-      if (user.role === "patient") {
-        patient_id = user.email;
-      }
-    }
-
-    const response = await fetch(`${BASE_URL}/predict`, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json"
-      },
-      body: JSON.stringify({ 
-        symptoms: symptoms,
-        patient_id: patient_id
-      })
-    });
-
-    const data = await response.json();
-    console.log("Prediction result:", data);
-
-    let confidenceColor = "#10b981";
-    if (data.confidence < 80) confidenceColor = "#f59e0b";
-    if (data.confidence < 70) confidenceColor = "#ef4444";
-
-    const resultHtml = `
-      <div class="prediction-result-overlay" onclick="if(event.target===this)this.remove()">
-        <div class="prediction-result-card">
-          <div class="result-header">
-            <h3><i class="fas fa-microscope"></i> Analysis Result</h3>
-            <button class="result-close" onclick="this.closest('.prediction-result-overlay').remove()">&times;</button>
-          </div>
-          <div class="result-disease">
-            <label>Predicted Disease</label>
-            <h2 style="color: ${confidenceColor};">${data.disease}</h2>
-          </div>
-          <div class="result-confidence">
-            <label>Confidence Level</label>
-            <div class="confidence-value" style="color: ${confidenceColor};">${data.confidence}%</div>
-            <div class="confidence-bar">
-              <div class="confidence-fill" style="width: ${data.confidence}%; background: ${confidenceColor};"></div>
-            </div>
-          </div>
-          <div class="result-remedies">
-            <label><i class="fas fa-leaf"></i> Home Remedies</label>
-            <ul>
-              ${data.remedies.map(r => `<li>${r}</li>`).join("")}
-            </ul>
-          </div>
-          <div class="result-note">
-            <small><i class="fas fa-exclamation-triangle"></i> This is an AI prediction. Please consult a doctor for proper medical advice.</small>
-          </div>
-          <button class="btn-close-result" onclick="this.closest('.prediction-result-overlay').remove()">Close</button>
-        </div>
-      </div>
-    `;
-
-    document.body.insertAdjacentHTML('beforeend', resultHtml);
-    
-    if (data.saved && patient_id) {
-      const modal = document.getElementById("login-modal");
-      if (modal && modal.style.display === "flex") {
-        const savedUserData = JSON.parse(savedUser);
-        await loadPatientHistory(savedUserData.email);
-      }
-    }
-    
-  } catch (error) {
-    console.error(error);
-    alert("Prediction failed. Make sure the backend server is running on port 5000.");
-  }
-}
-
-function toggleFAQ(element) {
-  const item = element.parentElement;
-  document.querySelectorAll(".faq-item").forEach((otherItem) => {
-    if (otherItem !== item) otherItem.classList.remove("active");
-  });
-  item.classList.toggle("active");
-}
-
-// Page Initialization
+// ── Page Init ─────────────────────────────────────────────────────────
 window.addEventListener("load", () => {
   const savedTheme = localStorage.getItem("hp_theme");
   if (savedTheme) {
     document.body.setAttribute("data-theme", savedTheme);
     if (themeBtn)
       themeBtn.innerHTML =
-        savedTheme === "dark"
-          ? '<i class="fas fa-sun"></i>'
-          : '<i class="fas fa-moon"></i>';
+        savedTheme === "dark" ? '<i class="fas fa-sun"></i>' : '<i class="fas fa-moon"></i>';
   }
-  const savedUser =
-    localStorage.getItem("currentUser") ||
-    sessionStorage.getItem("currentUser");
+
+  const savedUser = localStorage.getItem("currentUser") || sessionStorage.getItem("currentUser");
   if (savedUser) updateNavAfterLogin(JSON.parse(savedUser));
+
   attachTagListeners();
 
   const analyzeBtn = document.querySelector(".btn-prediction");
