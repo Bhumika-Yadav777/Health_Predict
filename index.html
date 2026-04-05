@@ -15,7 +15,6 @@
     ></script>
     <script type="text/javascript">
       (function () {
-        // Replace "YOUR_PUBLIC_KEY" with the one from your EmailJS Account > API Keys
         emailjs.init("f99c-CDS2yWKTqym9");
       })();
     </script>
@@ -27,7 +26,6 @@
           <img src="./LOGO.jpeg" height="50" width="100" />
           <div class="logo">HealthPredict</div>
         </div>
-
         <ul class="nav-links">
           <li><a href="#home">Home</a></li>
           <li><a href="#analysis">AI Analysis</a></li>
@@ -35,12 +33,10 @@
           <li><a href="#about">About Us</a></li>
           <li><a href="#contact">Contact</a></li>
         </ul>
-
         <div class="nav-actions">
           <button id="theme-toggle" class="btn-icon">
             <i class="fas fa-sun"></i>
           </button>
-
           <div
             id="main-signin-btn"
             class="profile-nav-container"
@@ -64,6 +60,7 @@
       </p>
     </section>
 
+    <!-- ===================== SYMPTOM ANALYSIS ===================== -->
     <section id="analysis" class="container">
       <div class="symptom-container">
         <h2 class="heading">Symptom Analysis</h2>
@@ -121,40 +118,49 @@
             placeholder="Any relevant medical conditions or history..."
           ></textarea>
         </div>
-        <button class="btn-prediction">
+
+        <button class="btn-prediction" id="predict-btn">
           Get Prediction <i class="fas fa-arrow-right"></i>
         </button>
+
+        <!-- ===== INLINE PREDICTION RESULT (directly below the button) ===== -->
+        <div id="prediction-result" class="prediction-result-inline" style="display:none;">
+          <div class="pred-result-header">
+            <span class="pred-badge-ai"><i class="fas fa-robot"></i> AI ANALYSIS COMPLETE</span>
+          </div>
+
+          <div class="pred-disease-row">
+            <div class="pred-label">Predicted Condition</div>
+            <div id="disease-name" class="pred-disease-name"></div>
+          </div>
+
+          <div class="pred-confidence-row">
+            <div class="pred-conf-meta">
+              <span class="pred-label">Match Confidence</span>
+              <span id="confidence-percent" class="pred-conf-value"></span>
+            </div>
+            <div class="pred-conf-bar-wrap">
+              <div id="confidence-bar" class="pred-conf-bar-fill"></div>
+            </div>
+            <p class="pred-conf-note">
+              Our Random Forest model calculated this probability based on your reported symptoms.
+            </p>
+          </div>
+
+          <div class="pred-remedies-row">
+            <div class="pred-label"><i class="fas fa-hand-holding-medical"></i> Recommended Actions</div>
+            <div id="remedies-list" class="pred-remedies-list"></div>
+          </div>
+
+          <div class="pred-disclaimer">
+            <i class="fas fa-exclamation-triangle"></i>
+            <strong>Disclaimer:</strong> This is an automated preliminary assessment. It is not a substitute for professional medical diagnosis. Please consult a healthcare provider.
+          </div>
+        </div>
+        <!-- ===== END INLINE RESULT ===== -->
+
       </div>
     </section>
-    
-<section id="prediction-result" class="container glass-card" style="display: none; margin-top: 50px;">
-    <div class="result-header" style="text-align: center; margin-bottom: 30px;">
-        <span class="role-badge">AI ANALYSIS COMPLETE</span>
-        <div id="disease-name"></div>
-    </div>
-
-    <div class="result-grid" style="display: grid; grid-template-columns: 1fr 1fr; gap: 40px; align-items: start;">
-        <div class="confidence-box">
-            <h4 style="margin-bottom: 15px;"><i class="fas fa-chart-line"></i> Match Confidence</h4>
-            <div id="confidence-level"></div>
-            <p style="font-size: 0.85rem; opacity: 0.7; margin-top: 10px;">
-                Our Random Forest model calculated this probability based on your reported symptoms.
-            </p>
-        </div>
-
-        <div class="remedies-box">
-            <h4 style="margin-bottom: 15px;"><i class="fas fa-hand-holding-medical"></i> Recommended Actions</h4>
-            <div id="remedies-list">
-                </div>
-        </div>
-    </div>
-
-    <div style="background: rgba(245, 158, 11, 0.1); border-radius: 12px; padding: 15px; margin-top: 30px; border: 1px solid rgba(245, 158, 11, 0.3);">
-        <small style="color: #d97706; display: block; text-align: center;">
-            <i class="fas fa-exclamation-triangle"></i> <strong>Disclaimer:</strong> This is an automated preliminary assessment. It is not a substitute for professional medical diagnosis. Please consult a healthcare provider.
-        </small>
-    </div>
-</section>
 
     <section id="how-it-works" class="container">
       <h2 class="center">How It Works</h2>
@@ -186,6 +192,7 @@
       </div>
     </section>
 
+    <!-- ===================== DOCTOR DASHBOARD ===================== -->
     <section id="doctor-dashboard" class="container">
       <div class="glass-card dashboard-container">
         <div class="dashboard-header">
@@ -206,46 +213,38 @@
           </button>
         </div>
 
-       <div id="patient-result-area" style="display: none">
-    <div class="patient-info-summary">
-        <div>
-            <p><strong>Patient ID:</strong> <span id="res-name">--</span></p>
-            <p><strong>Last Visit:</strong> <span id="res-date">--</span></p>
-        </div>
-        <div>
-            <p><strong>Total Records:</strong> <span id="total-records">0</span></p>
-            <p><strong>Avg Confidence:</strong> <span id="avg-confidence">--</span></p>
-        </div>
-    </div>
+        <div id="patient-result-area" style="display: none">
+          <div class="patient-info-summary">
+            <div>
+              <p><strong>Patient ID:</strong> <span id="res-name">--</span></p>
+              <p><strong>Last Visit:</strong> <span id="res-date">--</span></p>
+            </div>
+            <div>
+              <p><strong>Total Records:</strong> <span id="total-records">0</span></p>
+              <p><strong>Avg Confidence:</strong> <span id="avg-confidence">--</span></p>
+            </div>
+          </div>
 
-    <div class="table-responsive">
-        <table class="record-table">
-            <thead>
+          <div class="table-responsive">
+            <table class="record-table">
+              <thead>
                 <tr>
-                    <th>Date</th>
-                    <th>Symptoms Analyzed</th>
-                    <th>Predicted Disease</th>
-                    <th>Confidence</th>
-                    <th>Status</th>
-                    <th>Remedies</th>
+                  <th>Date</th>
+                  <th>Symptoms Analyzed</th>
+                  <th>Predicted Disease</th>
+                  <th>Confidence</th>
+                  <th>Status</th>
+                  <th>Remedies</th>
                 </tr>
-            </thead>
-            <tbody id="patient-record-body"></tbody>
-        </table>
-    </div>
-</div>
+              </thead>
+              <tbody id="patient-record-body"></tbody>
+            </table>
+          </div>
+        </div>
 
-        <div
-          id="no-result-msg"
-          style="
-            display: none;
-            color: #e63946;
-            text-align: center;
-            margin-top: 20 px;
-          "
-        >
-          <i class="fas fa-exclamation-circle"></i> No patient found with that
-          ID.
+        <div id="no-result-msg" style="display:none; color:#e63946; text-align:center; margin-top:20px;">
+          <p><i class="fas fa-exclamation-circle"></i> No records found for patient ID: <strong id="no-result-id"></strong></p>
+          <p style="font-size:0.85rem; opacity:0.7; margin-top:6px;">Make sure the patient has made predictions after logging in.</p>
         </div>
       </div>
     </section>
@@ -270,36 +269,15 @@
           <p><i class="fas fa-phone"></i> 9595565211</p>
         </div>
         <form class="contact-form glass-card">
-          <input
-            type="text"
-            name="title"
-            placeholder="Subject/Topic"
-            required
-          />
-          <input
-            type="text"
-            name="name"
-            placeholder="Your Full Name"
-            required
-          />
-          <input
-            type="email"
-            name="email"
-            placeholder="Your Email Address"
-            required
-          />
-
-          <textarea
-            name="message"
-            rows="5"
-            placeholder="How can we help you today?"
-            required
-          ></textarea>
-
+          <input type="text" name="title" placeholder="Subject/Topic" required />
+          <input type="text" name="name" placeholder="Your Full Name" required />
+          <input type="email" name="email" placeholder="Your Email Address" required />
+          <textarea name="message" rows="5" placeholder="How can we help you today?" required></textarea>
           <button type="submit" class="btn-primary">Send Message</button>
         </form>
       </div>
     </section>
+
     <div id="login-modal" class="modal">
       <div class="modal-content glass-card auth-container"></div>
     </div>
@@ -322,20 +300,15 @@
             </p>
           </div>
         </div>
-
         <div class="faq-item glass-card">
           <div class="faq-question" onclick="toggleFAQ(this)">
             <span>Can I use it daily?</span>
             <i class="fas fa-plus"></i>
           </div>
           <div class="faq-answer">
-            <p>
-              Yes, you can track symptoms daily to monitor changes in your
-              health over time.
-            </p>
+            <p>Yes, you can track symptoms daily to monitor changes in your health over time.</p>
           </div>
         </div>
-
         <div class="faq-item glass-card">
           <div class="faq-question" onclick="toggleFAQ(this)">
             <span>Is my data kept private?</span>
@@ -344,12 +317,10 @@
           <div class="faq-answer">
             <p>
               Absolutely. We use end-to-end encryption and industry-standard
-              security protocols to ensure your health data remains
-              confidential.
+              security protocols to ensure your health data remains confidential.
             </p>
           </div>
         </div>
-
         <div class="faq-item glass-card">
           <div class="faq-question" onclick="toggleFAQ(this)">
             <span>Are remedies safe?</span>
@@ -371,11 +342,8 @@
           <div class="logo">HealthPredict</div>
           <p>xxxxxxxxxx</p>
           <p>healthpredict.us@gmail.com</p>
-          <button class="btn-outline" onclick="location.href = '#contact'">
-            Contact Us
-          </button>
+          <button class="btn-outline" onclick="location.href = '#contact'">Contact Us</button>
         </div>
-
         <div class="footer-links">
           <div class="link-group">
             <h4>About us</h4>
