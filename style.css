@@ -1218,3 +1218,389 @@ button {
   border-top: 1px solid rgba(0,0,0,0.1);
   font-size: 0.85rem;
 }
+
+/* ================================================================
+   HealthPredict — style_additions.css
+   ADD THESE RULES AT THE BOTTOM OF YOUR EXISTING style.css
+   ================================================================ */
+
+/* ── Inline Prediction Result ─────────────────────────────────── */
+.prediction-result-inline {
+  margin-top: 28px;
+  border: 2px solid #1D9E75;
+  border-radius: 16px;
+  padding: 24px;
+  background: linear-gradient(135deg, #f0fff8 0%, #e8f5e9 100%);
+  animation: fadeInUp 0.4s ease;
+}
+
+[data-theme="dark"] .prediction-result-inline {
+  background: linear-gradient(135deg, #0d2b20 0%, #0a2218 100%);
+  border-color: #1D9E75;
+}
+
+@keyframes fadeInUp {
+  from { opacity: 0; transform: translateY(14px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+.pred-result-header {
+  margin-bottom: 16px;
+}
+
+.pred-badge-ai {
+  background: #1D9E75;
+  color: #fff;
+  font-size: 11px;
+  font-weight: 700;
+  padding: 4px 12px;
+  border-radius: 99px;
+  letter-spacing: 0.07em;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.pred-label {
+  font-size: 12px;
+  color: #666;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  margin-bottom: 6px;
+  font-weight: 600;
+}
+
+[data-theme="dark"] .pred-label { color: #9ca3af; }
+
+.pred-disease-row {
+  margin-bottom: 18px;
+}
+
+.pred-disease-name {
+  font-size: 26px;
+  font-weight: 700;
+  color: #0F6E56;
+}
+
+[data-theme="dark"] .pred-disease-name { color: #5DCAA5; }
+
+.pred-confidence-row {
+  margin-bottom: 18px;
+}
+
+.pred-conf-meta {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 8px;
+}
+
+.pred-conf-value {
+  font-size: 20px;
+  font-weight: 700;
+  color: #0F6E56;
+}
+
+[data-theme="dark"] .pred-conf-value { color: #5DCAA5; }
+
+.pred-conf-bar-wrap {
+  height: 10px;
+  background: #d1fae5;
+  border-radius: 99px;
+  overflow: hidden;
+  margin-bottom: 6px;
+}
+
+[data-theme="dark"] .pred-conf-bar-wrap { background: #134e3c; }
+
+.pred-conf-bar-fill {
+  height: 100%;
+  border-radius: 99px;
+  background: #1D9E75;
+  transition: width 1s ease;
+  width: 0%;
+}
+
+.pred-conf-note {
+  font-size: 12px;
+  color: #888;
+  margin: 0;
+}
+
+.pred-remedies-row {
+  margin-bottom: 18px;
+}
+
+.pred-remedies-list ul {
+  padding-left: 20px;
+  margin-top: 8px;
+}
+
+.pred-remedies-list li {
+  font-size: 14px;
+  margin-bottom: 4px;
+  color: #333;
+}
+
+[data-theme="dark"] .pred-remedies-list li { color: #d1fae5; }
+
+.pred-disclaimer {
+  font-size: 12px;
+  color: #d97706;
+  background: rgba(245, 158, 11, 0.08);
+  border: 1px solid rgba(245, 158, 11, 0.3);
+  border-radius: 10px;
+  padding: 12px 16px;
+  display: flex;
+  gap: 8px;
+  align-items: flex-start;
+  line-height: 1.5;
+}
+
+/* ── Profile Modal ────────────────────────────────────────────── */
+.auth-container {
+  position: relative;
+  max-height: 90vh;
+  overflow-y: auto;
+  padding: 28px 24px;
+  width: 100%;
+  max-width: 480px;
+}
+
+.profile-header {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  margin-bottom: 20px;
+  padding-bottom: 16px;
+  border-bottom: 1px solid rgba(29, 158, 117, 0.2);
+}
+
+.profile-avatar {
+  width: 56px;
+  height: 56px;
+  border-radius: 50%;
+  background: #1D9E75;
+  color: #fff;
+  font-size: 20px;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.profile-name {
+  font-size: 18px;
+  font-weight: 700;
+  color: inherit;
+}
+
+.profile-role-badge {
+  display: inline-block;
+  background: #1D9E75;
+  color: #fff;
+  font-size: 10px;
+  font-weight: 700;
+  padding: 2px 10px;
+  border-radius: 99px;
+  letter-spacing: 0.08em;
+  margin-top: 4px;
+}
+
+.profile-meta {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-bottom: 20px;
+}
+
+.profile-meta-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 13.5px;
+  color: inherit;
+}
+
+.profile-meta-item i {
+  color: #1D9E75;
+  width: 16px;
+  text-align: center;
+}
+
+/* Prediction History Section */
+.profile-pred-section {
+  margin-bottom: 20px;
+}
+
+.profile-pred-title {
+  font-size: 14px;
+  font-weight: 700;
+  color: #1D9E75;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 12px;
+}
+
+.profile-pred-count {
+  background: #E1F5EE;
+  color: #0F6E56;
+  font-size: 11px;
+  font-weight: 700;
+  padding: 2px 8px;
+  border-radius: 99px;
+}
+
+/* ★ KEY FIX: scrollable prediction list */
+.profile-pred-scroll {
+  max-height: 320px;
+  overflow-y: auto;
+  padding-right: 6px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  scroll-behavior: smooth;
+}
+
+.profile-pred-scroll::-webkit-scrollbar { width: 4px; }
+.profile-pred-scroll::-webkit-scrollbar-track { background: transparent; }
+.profile-pred-scroll::-webkit-scrollbar-thumb { background: #9FE1CB; border-radius: 4px; }
+
+/* Each prediction card */
+.profile-pred-card {
+  border: 1px solid #c6f0e0;
+  border-radius: 12px;
+  padding: 12px 14px;
+  background: #f7fffe;
+  flex-shrink: 0;
+}
+
+[data-theme="dark"] .profile-pred-card {
+  background: #0d2b20;
+  border-color: #1a4a36;
+}
+
+.profile-pred-top {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 8px;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.profile-pred-date {
+  font-size: 11px;
+  color: #888;
+  display: flex;
+  align-items: center;
+  gap: 5px;
+}
+
+.profile-conf-badge {
+  font-size: 11px;
+  font-weight: 700;
+  padding: 2px 10px;
+  border-radius: 99px;
+}
+
+.conf-high   { background: #d4edda; color: #155724; }
+.conf-medium { background: #fff3cd; color: #856404; }
+.conf-low    { background: #f8d7da; color: #721c24; }
+
+[data-theme="dark"] .conf-high   { background: #1a4a2e; color: #6fcf97; }
+[data-theme="dark"] .conf-medium { background: #3d2e00; color: #fbbf24; }
+[data-theme="dark"] .conf-low    { background: #3b1212; color: #f87171; }
+
+.profile-pred-disease {
+  font-size: 15px;
+  font-weight: 700;
+  color: #0F6E56;
+  margin-bottom: 6px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+[data-theme="dark"] .profile-pred-disease { color: #5DCAA5; }
+
+.profile-pred-symptoms {
+  font-size: 12px;
+  color: #555;
+  margin-bottom: 8px;
+  line-height: 1.5;
+}
+
+[data-theme="dark"] .profile-pred-symptoms { color: #9ca3af; }
+
+.profile-pred-remedies {
+  font-size: 12px;
+  color: #444;
+}
+
+[data-theme="dark"] .profile-pred-remedies { color: #aaa; }
+
+.profile-pred-remedies ul {
+  padding-left: 18px;
+  margin-top: 4px;
+}
+
+.profile-pred-remedies li { margin-bottom: 2px; }
+
+.pred-empty {
+  text-align: center;
+  color: #888;
+  font-size: 13px;
+  padding: 20px 0;
+  font-style: italic;
+}
+
+/* Sign Out Button */
+.btn-signout {
+  width: 100%;
+  padding: 10px;
+  border-radius: 10px;
+  border: 1.5px solid #e63946;
+  background: transparent;
+  color: #e63946;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  transition: all 0.2s;
+}
+
+.btn-signout:hover {
+  background: #e63946;
+  color: #fff;
+}
+
+/* ── Doctor Dashboard fixes ───────────────────────────────────── */
+#no-result-msg {
+  padding: 24px;
+}
+
+#no-result-msg p:first-child {
+  font-size: 15px;
+  font-weight: 600;
+}
+
+.record-table td {
+  padding: 10px 12px;
+  font-size: 13px;
+  vertical-align: top;
+  border-bottom: 1px solid rgba(0,0,0,0.06);
+}
+
+.record-table tr:last-child td {
+  border-bottom: none;
+}
+
+.record-table tr:hover td {
+  background: rgba(29, 158, 117, 0.04);
+}
